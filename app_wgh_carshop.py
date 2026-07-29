@@ -111,7 +111,7 @@ tab_campana, tab_inventario = st.tabs([
 ])
 
 # ---------------------------------------------------------
-# PESTAÑA 1: MODO CAMPAÑA RÁPIDA (BÚSQUEDA AUTOMÁTICA DE FOTOS MEJORADA)
+# PESTAÑA 1: MODO CAMPAÑA RÁPIDA (MÚLTIPLES FOTOS AUTOMÁTICAS DESDE SHEETS)
 # ---------------------------------------------------------
 with tab_campana:
   st.markdown("### ⚡ Generador Instantáneo para Campañas")
@@ -175,46 +175,51 @@ with tab_campana:
         placeholder="Ej. Cuenca, Quito, Guayaquil",
     )
 
-    # LÓGICA MEJORADA DE BÚSQUEDA DE IMAGEN EN SHEET
-    url_auto_sheet = ""
+    # ---------------------------------------------------------
+    # BÚSQUEDA DE MÚLTIPLES IMÁGENES EN GOOGLE SHEETS
+    # ---------------------------------------------------------
+    urls_encontradas = []
     if not df.empty:
-      col_img_nombre = next(
-          (c for c in df.columns if "URL Imagen 1" in c or "Imagen 1" in c), None
-      )
+      # Identificar todas las columnas de imágenes (ej. Imagen 1, Imagen 2, Imagen 3, etc.)
+      cols_img = [
+          c
+          for c in df.columns
+          if "imagen" in c.lower() or "foto" in c.lower() or "url" in c.lower()
+      ]
 
-      if col_img_nombre:
-        # Extraer palabras clave de la selección (ej: 'D-Max', '2014')
-        palabras_clave = [
-            p.strip()
-            for p in sub_sel.replace("-", " ")
-            .replace("/", " ")
-            .split()
-            if len(p.strip()) > 2
-        ]
+      # Extraer palabras clave de búsqueda (ej. 'D-Max', '2014')
+      palabras_clave = [
+          p.strip()
+          for p in sub_sel.replace("-", " ")
+          .replace("/", " ")
+          .split()
+          if len(p.strip()) > 2
+      ]
 
-        # Filtrar filas que contengan la palabra clave principal (ej: 'D-Max')
-        df_coincidencias = df.copy()
-        for kw in palabras_clave:
-          mask = (
-              df_coincidencias.astype(str)
-              .apply(
-                  lambda row: row.str.contains(kw, case=False, na=False)
-              )
-              .any(axis=1)
-          )
-          if mask.any():
-            df_coincidencias = df_coincidencias[mask]
+      df_coincidencias = df.copy()
+      for kw in palabras_clave:
+        mask = (
+            df_coincidencias.astype(str)
+            .apply(lambda row: row.str.contains(kw, case=False, na=False))
+            .any(axis=1)
+        )
+        if mask.any():
+          df_coincidencias = df_coincidencias[mask]
 
-        if not df_coincidencias.empty:
-          # Tomar la URL de la primera coincidencia encontrada
-          url_auto_sheet = df_coincidencias.iloc[0].get(col_img_nombre, "")
+      if not df_coincidencias.empty:
+        fila = df_coincidencias.iloc[0]
+        for col in cols_img:
+          val = str(fila.get(col, "")).strip()
+          if val and val.lower() != "nan" and "http" in val:
+            urls_encontradas.append(val)
 
-    # Permite pegar URL manual o usa la encontrada en Sheets
-    url_imagen_input = st.text_input(
-        "URL de Imagen del Producto (Google Drive o Web):",
-        value=str(url_auto_sheet)
-        if pd.notna(url_auto_sheet) and str(url_auto_sheet).strip() != "nan"
-        else "",
+    # Si hay más de una URL, las unimos con saltos de línea para la casilla de texto
+    urls_def_text = "\n".join(urls_encontradas) if urls_encontradas else ""
+
+    urls_input = st.text_area(
+        "URLs de Imágenes del Producto (1 por línea):",
+        value=urls_def_text,
+        height=100,
         placeholder="https://drive.google.com/file/d/...",
     )
 
@@ -228,14 +233,25 @@ with tab_campana:
         f" para {ciudad_cli.strip().title()}" if ciudad_cli.strip() else ""
     )
 
-    # Convertir link de Drive a URL directa
-    url_img_campana_directa = convertir_link_drive(url_imagen_input)
+    # Procesar y convertir cada URL ingresada
+    lista_urls_raw = [
+        u.strip() for u in urls_input.split("\n") if u.strip() != ""
+    ]
+    lista_urls_directas = []
 
-    img_txt = (
-        f"\n\n📷 Ver foto del producto:\n{url_img_campana_directa}"
-        if url_img_campana_directa
-        else ""
-    )
+    for u in lista_urls_raw:
+      u_dir = convertir_link_drive(u)
+      if u_dir:
+        lista_urls_directas.append(u_dir)
+
+    # Construir la sección de fotos para el mensaje
+    img_txt = ""
+    if len(lista_urls_directas) == 1:
+      img_txt = f"\n\n📷 Ver foto del producto:\n{lista_urls_directas[0]}"
+    elif len(lista_urls_directas) > 1:
+      img_txt = "\n\n📷 Ver fotos del producto:\n" + "\n".join(
+          [f"• {u}" for u in lista_urls_directas]
+      )
 
     msg_campana = (
         f"{saludo_txt}"
@@ -244,14 +260,13 @@ with tab_campana:
         f"¿UD nos paga al recibir su pedido por Servientrega?{img_txt}"
     )
 
-    st.text_area("Vista previa del mensaje:", msg_campana, height=220)
+    st.text_area("Vista previa del mensaje:", msg_campana, height=240)
 
-    if url_img_campana_directa:
-      st.image(
-          url_img_campana_directa,
-          caption="Vista previa de la imagen que se adjuntará",
-          use_container_width=True,
-      )
+    # Mostrar la vista previa de todas las fotos en Streamlit
+    if lista_urls_directas:
+      st.markdown("**Vista previa de fotos adjuntas:**")
+      for idx, link_f in enumerate(lista_urls_directas, 1):
+        st.image(link_f, caption=f"Foto {idx}", use_container_width=True)
 
     text_encoded = urllib.parse.quote(msg_campana)
     link_wa_campana = f"https://api.whatsapp.com/send?text={text_encoded}"
@@ -270,15 +285,15 @@ with tab_campana:
                 width: 100%;
                 cursor: pointer;
             ">
-                📲 Enviar Texto y Foto por WhatsApp
+                📲 Enviar Texto y Fotos por WhatsApp
             </button>
         </a>
         """,
         unsafe_allow_html=True,
     )
     st.caption(
-        "💡 Si pegas o modificas una URL a mano, verifica que aparezca la"
-        " vista previa abajo antes de presionar el botón de WhatsApp."
+        "💡 Si tu producto tiene 2 o 3 fotos en la tabla, la app las detectará"
+        " e incluirá los enlaces automáticamente en viñetas."
     )
 # ---------------------------------------------------------
 # PESTAÑA 2: BUSCADOR GENERAL DE INVENTARIO
