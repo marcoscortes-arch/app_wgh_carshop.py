@@ -163,23 +163,24 @@ with tab_campana:
     ciudad_txt = (
         f" para {ciudad_cli.strip().title()}" if ciudad_cli.strip() else ""
     )
+
+    # Ubicamos el enlace al final del mensaje para facilitar que WhatsApp genere la miniatura
     img_txt = (
-        f"\n\nFoto del producto: {url_imagen_input.strip()}"
+        f"\n\n📷 Ver foto del producto:\n{url_imagen_input.strip()}"
         if url_imagen_input.strip()
         else ""
     )
 
-    # Construcción del texto con el formato solicitado
     msg_campana = (
         f"{saludo_txt}"
         f"Disponemos la mascarilla para *{sub_sel}*{ciudad_txt}.\n\n"
-        f"En oferta *${precio_prod:.2f}* más *${costo_envio:.2f}* de envío.{img_txt}\n\n"
-        f"¿UD nos paga al recibir su pedido por Servientrega?"
+        f"En oferta *${precio_prod:.2f}* más *${costo_envio:.2f}* de envío.\n\n"
+        f"¿UD nos paga al recibir su pedido por Servientrega?{img_txt}"
     )
 
     st.text_area("Vista previa del mensaje:", msg_campana, height=220)
 
-    # Codificación para la URL de WhatsApp
+    # Codificación para WhatsApp
     text_encoded = urllib.parse.quote(msg_campana)
     link_wa_campana = f"https://api.whatsapp.com/send?text={text_encoded}"
 
@@ -204,8 +205,8 @@ with tab_campana:
         unsafe_allow_html=True,
     )
     st.caption(
-        "💡 Tip: Presiona el botón para abrir WhatsApp directamente con el"
-        " texto listo."
+        "💡 Nota: Para que WhatsApp cargue la vista previa de la foto, espera"
+        " 1 o 2 segundos antes de presionar Enviar en WhatsApp."
     )
 
 # ---------------------------------------------------------
