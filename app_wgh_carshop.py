@@ -2,6 +2,35 @@ import urllib.parse
 import pandas as pd
 import streamlit as st
 
+
+def convertir_link_drive(url):
+  """Convierte cualquier URL de Google Drive (compartida o directa)
+
+  en un enlace de imagen utilizable por Streamlit y WhatsApp.
+  """
+  url = str(url).strip()
+
+  if not url or url == "nan":
+    return ""
+
+  # Si ya es un enlace de GitHub o directo, lo deja igual
+  if "drive.google.com" not in url:
+    return url
+
+  # Extraer el ID de Google Drive
+  file_id = ""
+  if "/file/d/" in url:
+    file_id = url.split("/file/d/")[1].split("/")[0].split("?")[0]
+  elif "id=" in url:
+    file_id = url.split("id=")[1].split("&")[0]
+
+  if file_id:
+    # Formato CDN de Google para visualización directa
+    return f"https://lh3.googleusercontent.com/d/{file_id}"
+
+  return url
+
+
 # 1. Configuración de la página
 st.set_page_config(
     page_title="W.G.H. Car Shop - Buscador de Accesorios",
@@ -164,10 +193,12 @@ with tab_campana:
         f" para {ciudad_cli.strip().title()}" if ciudad_cli.strip() else ""
     )
 
-    # Ubicamos el enlace al final del mensaje para facilitar que WhatsApp genere la miniatura
+    # Convertimos la URL de la Pestaña 1
+    url_img_campana_directa = convertir_link_drive(url_imagen_input)
+
     img_txt = (
-        f"\n\n📷 Ver foto del producto:\n{url_imagen_input.strip()}"
-        if url_imagen_input.strip()
+        f"\n\n📷 Ver foto del producto:\n{url_img_campana_directa}"
+        if url_img_campana_directa
         else ""
     )
 
@@ -298,8 +329,18 @@ with tab_inventario:
 
           col_img1, col_img2, col_img3 = st.columns(3)
 
+          # Conversión de links de Google Drive para la vista de Streamlit y WhatsApp
+          url_img1 = convertir_link_drive(
+              row.get("URL Imagen 1 (Principal)", "")
+          )
+          url_img2 = convertir_link_drive(
+              row.get("URL Imagen 2 (Exhibición)", "")
+          )
+          url_img3 = convertir_link_drive(
+              row.get("URL Imagen 3 (Instalada)", "")
+          )
+
           with col_img1:
-            url_img1 = str(row.get("URL Imagen 1 (Principal)", "")).strip()
             if url_img1 and url_img1.startswith("http"):
               st.image(
                   url_img1, caption="Principal", use_container_width=True
@@ -308,7 +349,6 @@ with tab_inventario:
               st.caption("📷 Sin Imagen 1")
 
           with col_img2:
-            url_img2 = str(row.get("URL Imagen 2 (Exhibición)", "")).strip()
             if url_img2 and url_img2.startswith("http"):
               st.image(
                   url_img2, caption="Exhibición", use_container_width=True
@@ -317,7 +357,6 @@ with tab_inventario:
               st.caption("📷 Sin Imagen 2")
 
           with col_img3:
-            url_img3 = str(row.get("URL Imagen 3 (Instalada)", "")).strip()
             if url_img3 and url_img3.startswith("http"):
               st.image(
                   url_img3, caption="Instalada", use_container_width=True
@@ -343,9 +382,9 @@ with tab_inventario:
             texto_msj = (
                 "¡Hola! 👋 Le comparto las imágenes de la"
                 f" *{producto_nombre}* para tu {row.get('Marca', '')}"
-                f" {row.get('Modelo', '')} que me consulto:\n\n💰 **Precio:**"
+                f" {row.get('Modelo', '')} que me consultó:\n\n💰 *Precio:*"
                 f" ${row.get('Precio ($)', row.get('Precio', '0.00'))}\n🔢"
-                f" **Código/SKU:** {row.get('SKU / Código', 'N/A')}\n\nAquí puedes"
+                f" *Código/SKU:* {row.get('SKU / Código', 'N/A')}\n\nAquí puedes"
                 " ver cómo es y cómo queda:\n"
             )
 
@@ -366,22 +405,22 @@ with tab_inventario:
 
             st.markdown(
                 f"""
-                        <a href="{link_wa}" target="_blank" style="text-decoration: none;">
-                            <button style="
-                                background-color: #e62117;
-                                color: white;
-                                border: none;
-                                padding: 12px 24px;
-                                border-radius: 8px;
-                                font-size: 16px;
-                                font-weight: bold;
-                                width: 100%;
-                                cursor: pointer;
-                            ">
-                                📲 Enviar 3 Fotos por WhatsApp
-                            </button>
-                        </a>
-                        """,
+                <a href="{link_wa}" target="_blank" style="text-decoration: none;">
+                    <button style="
+                        background-color: #e62117;
+                        color: white;
+                        border: none;
+                        padding: 12px 24px;
+                        border-radius: 8px;
+                        font-size: 16px;
+                        font-weight: bold;
+                        width: 100%;
+                        cursor: pointer;
+                    ">
+                        📲 Enviar 3 Fotos por WhatsApp
+                    </button>
+                </a>
+                """,
                 unsafe_allow_html=True,
             )
 
