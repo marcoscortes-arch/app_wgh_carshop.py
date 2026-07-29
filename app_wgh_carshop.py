@@ -111,7 +111,7 @@ tab_campana, tab_inventario = st.tabs([
 ])
 
 # ---------------------------------------------------------
-# PESTAÑA 1: MODO CAMPAÑA RÁPIDA
+# PESTAÑA 1: MODO CAMPAÑA RÁPIDA (CORREGIDO)
 # ---------------------------------------------------------
 with tab_campana:
   st.markdown("### ⚡ Generador Instantáneo para Campañas")
@@ -174,26 +174,25 @@ with tab_campana:
         "Ciudad del Cliente (Opcional):",
         placeholder="Ej. Cuenca, Quito, Guayaquil",
     )
+
+    # Pegar aquí directamente el enlace compartido de Google Drive
     url_imagen_input = st.text_input(
-        "URL de Imagen del Producto (Opcional):",
-        value=(
-            "https://raw.githubusercontent.com/marcoscortes-arch/app_wgh_carshop/main/dmax_2014-2018comoqueda.jpeg"
-            if "D-Max 2014 - 2018" in sub_sel
-            else ""
-        ),
-        placeholder="https://...",
+        "URL de Imagen del Producto (Google Drive o Web):",
+        value="",
+        placeholder="https://drive.google.com/file/d/...",
     )
-    incluir_saludo = st.checkbox("Incluir saludo ('Buenos días')", value=True)
+    incluir_saludo = st.checkbox("Incluir saludo ('Buen día')", value=True)
 
   with col_c2:
     st.markdown("### 📲 Mensaje Formateado Listo")
 
-    saludo_txt = "Buenos días\n\n" if incluir_saludo else ""
+    # Saludo neutro
+    saludo_txt = "Buen día\n\n" if incluir_saludo else ""
     ciudad_txt = (
         f" para {ciudad_cli.strip().title()}" if ciudad_cli.strip() else ""
     )
 
-    # Convertimos la URL de la Pestaña 1
+    # Se convierte automáticamente el enlace de Drive al formato CDN
     url_img_campana_directa = convertir_link_drive(url_imagen_input)
 
     img_txt = (
@@ -211,7 +210,7 @@ with tab_campana:
 
     st.text_area("Vista previa del mensaje:", msg_campana, height=220)
 
-    # Codificación para WhatsApp
+    # Codificación de la URL para WhatsApp
     text_encoded = urllib.parse.quote(msg_campana)
     link_wa_campana = f"https://api.whatsapp.com/send?text={text_encoded}"
 
