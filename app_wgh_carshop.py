@@ -111,7 +111,7 @@ tab_campana, tab_inventario = st.tabs([
 ])
 
 # ---------------------------------------------------------
-# PESTAÑA 1: MODO CAMPAÑA RÁPIDA (CORREGIDO)
+# PESTAÑA 1: MODO CAMPAÑA RÁPIDA (CON FOTO AUTOMÁTICA DE GOOGLE SHEETS)
 # ---------------------------------------------------------
 with tab_campana:
   st.markdown("### ⚡ Generador Instantáneo para Campañas")
@@ -175,10 +175,24 @@ with tab_campana:
         placeholder="Ej. Cuenca, Quito, Guayaquil",
     )
 
-    # Pegar aquí directamente el enlace compartido de Google Drive
+    # Buscamos en el DataFrame si existe una imagen para este modelo seleccionado
+    url_auto_sheet = ""
+    if not df.empty and "URL Imagen 1 (Principal)" in df.columns:
+      # Busca si en alguna fila del Excel el texto coincide con la selección
+      coincidencia = df[
+          df.astype(str)
+          .apply(lambda row: row.str.contains(sub_sel, case=False, na=False))
+          .any(axis=1)
+      ]
+      if not coincidencia.empty:
+        url_auto_sheet = coincidencia.iloc[0].get(
+            "URL Imagen 1 (Principal)", ""
+        )
+
+    # Permitir ingresar una URL manual o usar la que viene del Excel
     url_imagen_input = st.text_input(
-        "URL de Imagen del Producto (Google Drive o Web):",
-        value="",
+        "URL de Imagen del Producto:",
+        value=str(url_auto_sheet) if pd.notna(url_auto_sheet) else "",
         placeholder="https://drive.google.com/file/d/...",
     )
     incluir_saludo = st.checkbox("Incluir saludo ('Buen día')", value=True)
@@ -186,13 +200,12 @@ with tab_campana:
   with col_c2:
     st.markdown("### 📲 Mensaje Formateado Listo")
 
-    # Saludo neutro
     saludo_txt = "Buen día\n\n" if incluir_saludo else ""
     ciudad_txt = (
         f" para {ciudad_cli.strip().title()}" if ciudad_cli.strip() else ""
     )
 
-    # Se convierte automáticamente el enlace de Drive al formato CDN
+    # Convertimos la URL de Google Drive al formato de imagen directa
     url_img_campana_directa = convertir_link_drive(url_imagen_input)
 
     img_txt = (
@@ -210,7 +223,14 @@ with tab_campana:
 
     st.text_area("Vista previa del mensaje:", msg_campana, height=220)
 
-    # Codificación de la URL para WhatsApp
+    # Mostrar la imagen en Streamlit si existe la URL
+    if url_img_campana_directa:
+      st.image(
+          url_img_campana_directa,
+          caption="Imagen que se enviará",
+          use_container_width=True,
+      )
+
     text_encoded = urllib.parse.quote(msg_campana)
     link_wa_campana = f"https://api.whatsapp.com/send?text={text_encoded}"
 
@@ -228,17 +248,17 @@ with tab_campana:
                 width: 100%;
                 cursor: pointer;
             ">
-                📲 Enviar Texto por WhatsApp
+                📲 Enviar Texto y Foto por WhatsApp
             </button>
         </a>
         """,
         unsafe_allow_html=True,
     )
     st.caption(
-        "💡 Nota: Para que WhatsApp cargue la vista previa de la foto, espera"
-        " 1 o 2 segundos antes de presionar Enviar en WhatsApp."
+        "💡 Consejo: Al abrir WhatsApp, espera 1 o 2 segundos a que WhatsApp"
+        " detecte el enlace y cargue la vista previa de la foto antes de pulsar"
+        " Enviar."
     )
-
 # ---------------------------------------------------------
 # PESTAÑA 2: BUSCADOR GENERAL DE INVENTARIO
 # ---------------------------------------------------------
