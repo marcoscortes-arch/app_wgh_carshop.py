@@ -111,7 +111,7 @@ tab_campana, tab_inventario = st.tabs([
 ])
 
 # ---------------------------------------------------------
-# PESTAÑA 1: MODO CAMPAÑA RÁPIDA (CON FOTO AUTOMÁTICA DE GOOGLE SHEETS)
+# PESTAÑA 1: MODO CAMPAÑA RÁPIDA (BÚSQUEDA AUTOMÁTICA DE FOTOS MEJORADA)
 # ---------------------------------------------------------
 with tab_campana:
   st.markdown("### ⚡ Generador Instantáneo para Campañas")
@@ -175,26 +175,49 @@ with tab_campana:
         placeholder="Ej. Cuenca, Quito, Guayaquil",
     )
 
-    # Buscamos en el DataFrame si existe una imagen para este modelo seleccionado
+    # LÓGICA MEJORADA DE BÚSQUEDA DE IMAGEN EN SHEET
     url_auto_sheet = ""
-    if not df.empty and "URL Imagen 1 (Principal)" in df.columns:
-      # Busca si en alguna fila del Excel el texto coincide con la selección
-      coincidencia = df[
-          df.astype(str)
-          .apply(lambda row: row.str.contains(sub_sel, case=False, na=False))
-          .any(axis=1)
-      ]
-      if not coincidencia.empty:
-        url_auto_sheet = coincidencia.iloc[0].get(
-            "URL Imagen 1 (Principal)", ""
-        )
+    if not df.empty:
+      col_img_nombre = next(
+          (c for c in df.columns if "URL Imagen 1" in c or "Imagen 1" in c), None
+      )
 
-    # Permitir ingresar una URL manual o usar la que viene del Excel
+      if col_img_nombre:
+        # Extraer palabras clave de la selección (ej: 'D-Max', '2014')
+        palabras_clave = [
+            p.strip()
+            for p in sub_sel.replace("-", " ")
+            .replace("/", " ")
+            .split()
+            if len(p.strip()) > 2
+        ]
+
+        # Filtrar filas que contengan la palabra clave principal (ej: 'D-Max')
+        df_coincidencias = df.copy()
+        for kw in palabras_clave:
+          mask = (
+              df_coincidencias.astype(str)
+              .apply(
+                  lambda row: row.str.contains(kw, case=False, na=False)
+              )
+              .any(axis=1)
+          )
+          if mask.any():
+            df_coincidencias = df_coincidencias[mask]
+
+        if not df_coincidencias.empty:
+          # Tomar la URL de la primera coincidencia encontrada
+          url_auto_sheet = df_coincidencias.iloc[0].get(col_img_nombre, "")
+
+    # Permite pegar URL manual o usa la encontrada en Sheets
     url_imagen_input = st.text_input(
-        "URL de Imagen del Producto:",
-        value=str(url_auto_sheet) if pd.notna(url_auto_sheet) else "",
+        "URL de Imagen del Producto (Google Drive o Web):",
+        value=str(url_auto_sheet)
+        if pd.notna(url_auto_sheet) and str(url_auto_sheet).strip() != "nan"
+        else "",
         placeholder="https://drive.google.com/file/d/...",
     )
+
     incluir_saludo = st.checkbox("Incluir saludo ('Buen día')", value=True)
 
   with col_c2:
@@ -205,7 +228,7 @@ with tab_campana:
         f" para {ciudad_cli.strip().title()}" if ciudad_cli.strip() else ""
     )
 
-    # Convertimos la URL de Google Drive al formato de imagen directa
+    # Convertir link de Drive a URL directa
     url_img_campana_directa = convertir_link_drive(url_imagen_input)
 
     img_txt = (
@@ -223,11 +246,10 @@ with tab_campana:
 
     st.text_area("Vista previa del mensaje:", msg_campana, height=220)
 
-    # Mostrar la imagen en Streamlit si existe la URL
     if url_img_campana_directa:
       st.image(
           url_img_campana_directa,
-          caption="Imagen que se enviará",
+          caption="Vista previa de la imagen que se adjuntará",
           use_container_width=True,
       )
 
@@ -255,9 +277,8 @@ with tab_campana:
         unsafe_allow_html=True,
     )
     st.caption(
-        "💡 Consejo: Al abrir WhatsApp, espera 1 o 2 segundos a que WhatsApp"
-        " detecte el enlace y cargue la vista previa de la foto antes de pulsar"
-        " Enviar."
+        "💡 Si pegas o modificas una URL a mano, verifica que aparezca la"
+        " vista previa abajo antes de presionar el botón de WhatsApp."
     )
 # ---------------------------------------------------------
 # PESTAÑA 2: BUSCADOR GENERAL DE INVENTARIO
