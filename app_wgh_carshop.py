@@ -1,16 +1,17 @@
-import pandas as pd
 import urllib.parse
+import pandas as pd
 import streamlit as st
 
 # 1. Configuración de la página
 st.set_page_config(
     page_title="W.G.H. Car Shop - Buscador de Accesorios",
     layout="wide",
-    page_icon="🚗"
+    page_icon="🚗",
 )
 
 # Estilo personalizado para el logo W.G.H.
-st.markdown("""
+st.markdown(
+    """
 <style>
     .reportview-container .main .block-container{
         padding-top: 1rem;
@@ -31,99 +32,159 @@ st.markdown("""
         margin-bottom: 20px;
     }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
-st.markdown('<div class="wgh-header">W.G.H. Car Shop</div>', unsafe_allow_html=True)
-st.markdown('<div class="wgh-sub">Buscador Rápido de Mascarillas y Accesorios</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="wgh-header">W.G.H. Car Shop</div>', unsafe_allow_html=True
+)
+st.markdown(
+    '<div class="wgh-sub">Buscador Rápido de Mascarillas y Accesorios</div>',
+    unsafe_allow_html=True,
+)
 
 # Enlace a Google Sheet (CSV)
 SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSDj39gzuKoA_6SgtWcVs5It-0WSzxGwb5it-9Ja012Al9pw3jpP6Ioxf8VrL66MQ/pub?output=csv"
 
+
 @st.cache_data(ttl=300)
 def cargar_inventario():
-    try:
-        df = pd.read_csv(SHEET_URL)
-        df.columns = df.columns.str.strip()
+  try:
+    df = pd.read_csv(SHEET_URL)
+    df.columns = df.columns.str.strip()
 
-        if "Año Inicial" in df.columns:
-            df["Año Inicial"] = pd.to_numeric(df["Año Inicial"], errors='coerce').fillna(1900).astype(int)
-        if "Año Final" in df.columns:
-            df["Año Final"] = pd.to_numeric(df["Año Final"], errors='coerce').fillna(2100).astype(int)
+    if "Año Inicial" in df.columns:
+      df["Año Inicial"] = (
+          pd.to_numeric(df["Año Inicial"], errors="coerce")
+          .fillna(1900)
+          .astype(int)
+      )
+    if "Año Final" in df.columns:
+      df["Año Final"] = (
+          pd.to_numeric(df["Año Final"], errors="coerce")
+          .fillna(2100)
+          .astype(int)
+      )
 
-        return df
-    except Exception as e:
-        st.error(f"Error al conectar con la base de datos de Google Sheets: {e}")
-        return pd.DataFrame()
+    return df
+  except Exception as e:
+    st.error(f"Error al conectar con la base de datos de Google Sheets: {e}")
+    return pd.DataFrame()
+
 
 df = cargar_inventario()
 
 # Pestañas principales
-tab_campana, tab_inventario = st.tabs(["⚡ Modo Campaña Rápida (4 Campañas)", "🔍 Buscador de Inventario General"])
+tab_campana, tab_inventario = st.tabs([
+    "⚡ Modo Campaña Rápida (4 Campañas)",
+    "🔍 Buscador de Inventario General",
+])
 
 # ---------------------------------------------------------
 # PESTAÑA 1: MODO CAMPAÑA RÁPIDA
 # ---------------------------------------------------------
 with tab_campana:
-    st.markdown("### ⚡ Generador Instantáneo para Campañas")
+  st.markdown("### ⚡ Generador Instantáneo para Campañas")
 
-    col_c1, col_c2 = st.columns([1, 1])
+  col_c1, col_c2 = st.columns([1, 1])
 
-    with col_c1:
-        campana_sel = st.selectbox(
-            "1. Selecciona la Campaña:",
-            [
-                "Mascarilla D-Max (Todos los años)",
-                "Mascarillas Ford (Varios modelos)",
-                "Protectores de Puerta (Multimarca)",
-                "Otras Mascarillas / Accesorios"
-            ]
-        )
+  with col_c1:
+    campana_sel = st.selectbox(
+        "1. Selecciona la Campaña:",
+        [
+            "Mascarilla D-Max (Todos los años)",
+            "Mascarillas Ford (Varios modelos)",
+            "Protectores de Puerta (Multimarca)",
+            "Otras Mascarillas / Accesorios",
+        ],
+    )
 
-        if "D-Max" in campana_sel:
-            opciones_sub = ["D-Max 2014 - 2018", "D-Max 2019 - 2021", "D-Max 2022 - 2024", "D-Max Luv / Clásica"]
-            precio_def = 175.0
-        elif "Ford" in campana_sel:
-            opciones_sub = ["Ford Ranger 2013 - 2016", "Ford Ranger 2017 - 2021", "Ford Ranger 2022+", "Ford F-150 / Raptor"]
-            precio_def = 185.0
-        elif "Protectores" in campana_sel:
-            opciones_sub = ["Toyota Hilux", "Chevrolet D-Max", "Ford Ranger", "Nissan Frontier / NP300", "Great Wall Poer / Wingle"]
-            precio_def = 120.0
-        else:
-            opciones_sub = ["Universal / Adaptable", "Modelo Específico"]
-            precio_def = 150.0
+    if "D-Max" in campana_sel:
+      opciones_sub = [
+          "D-Max 2014 - 2018",
+          "D-Max 2019 - 2021",
+          "D-Max 2022 - 2024",
+          "D-Max Luv / Clásica",
+      ]
+      precio_def = 175.0
+    elif "Ford" in campana_sel:
+      opciones_sub = [
+          "Ford Ranger 2013 - 2016",
+          "Ford Ranger 2017 - 2021",
+          "Ford Ranger 2022+",
+          "Ford F-150 / Raptor",
+      ]
+      precio_def = 185.0
+    elif "Protectores" in campana_sel:
+      opciones_sub = [
+          "Toyota Hilux",
+          "Chevrolet D-Max",
+          "Ford Ranger",
+          "Nissan Frontier / NP300",
+          "Great Wall Poer / Wingle",
+      ]
+      precio_def = 120.0
+    else:
+      opciones_sub = ["Universal / Adaptable", "Modelo Específico"]
+      precio_def = 150.0
 
-        sub_sel = st.selectbox("2. Selecciona Modelo / Año / Versión:", opciones_sub)
+    sub_sel = st.selectbox(
+        "2. Selecciona Modelo / Año / Versión:", opciones_sub
+    )
 
-        col_p1, col_p2 = st.columns(2)
-        with col_p1:
-            precio_prod = st.number_input("Precio Oferta ($):", value=precio_def, step=5.0)
-        with col_p2:
-            costo_envio = st.number_input("Costo de Envío ($):", value=10.0, step=1.0)
+    col_p1, col_p2 = st.columns(2)
+    with col_p1:
+      precio_prod = st.number_input(
+          "Precio Oferta ($):", value=precio_def, step=5.0
+      )
+    with col_p2:
+      costo_envio = st.number_input("Costo de Envío ($):", value=10.0, step=1.0)
 
-        ciudad_cli = st.text_input("Ciudad del Cliente (Opcional):", placeholder="Ej. Cuenca, Quito, Guayaquil")
-        incluir_saludo = st.checkbox("Incluir saludo ('Buenos días')", value=True)
+    ciudad_cli = st.text_input(
+        "Ciudad del Cliente (Opcional):",
+        placeholder="Ej. Cuenca, Quito, Guayaquil",
+    )
+    url_imagen_input = st.text_input(
+        "URL de Imagen del Producto (Opcional):",
+        value=(
+            "https://raw.githubusercontent.com/marcoscortes-arch/app_wgh_carshop/main/dmax_2014-2018comoqueda.jpeg"
+            if "D-Max 2014 - 2018" in sub_sel
+            else ""
+        ),
+        placeholder="https://...",
+    )
+    incluir_saludo = st.checkbox("Incluir saludo ('Buenos días')", value=True)
 
-    with col_c2:
-        st.markdown("### 📲 Mensaje Formateado Listo")
+  with col_c2:
+    st.markdown("### 📲 Mensaje Formateado Listo")
 
-        saludo_txt = "Buenos días\n\n" if incluir_saludo else ""
-        ciudad_txt = f" para {ciudad_cli.strip().title()}" if ciudad_cli.strip() else ""
+    saludo_txt = "Buenos días\n\n" if incluir_saludo else ""
+    ciudad_txt = (
+        f" para {ciudad_cli.strip().title()}" if ciudad_cli.strip() else ""
+    )
+    img_txt = (
+        f"\n\nFoto del producto: {url_imagen_input.strip()}"
+        if url_imagen_input.strip()
+        else ""
+    )
 
-        # Construcción del texto con el modelo corregido y negritas (*) de WhatsApp
-        msg_campana = (
-            f"{saludo_txt}"
-            f"Disponemos la mascarilla para *{sub_sel}*{ciudad_txt}.\n\n"
-            f"En oferta *${precio_prod:.2f}* más *${costo_envio:.2f}* de envío.\n\n"
-            f"¿UD nos paga al recibir su pedido por Servientrega?"
-        )
+    # Construcción del texto con el formato solicitado
+    msg_campana = (
+        f"{saludo_txt}"
+        f"Disponemos la mascarilla para *{sub_sel}*{ciudad_txt}.\n\n"
+        f"En oferta *${precio_prod:.2f}* más *${costo_envio:.2f}* de envío.{img_txt}\n\n"
+        f"¿UD nos paga al recibir su pedido por Servientrega?"
+    )
 
-        st.text_area("Vista previa del mensaje:", msg_campana, height=160)
+    st.text_area("Vista previa del mensaje:", msg_campana, height=220)
 
-        # Codificación para la URL de WhatsApp
-        text_encoded = urllib.parse.quote(msg_campana)
-        link_wa_campana = f"https://api.whatsapp.com/send?text={text_encoded}"
+    # Codificación para la URL de WhatsApp
+    text_encoded = urllib.parse.quote(msg_campana)
+    link_wa_campana = f"https://api.whatsapp.com/send?text={text_encoded}"
 
-        st.markdown(f"""
+    st.markdown(
+        f"""
         <a href="{link_wa_campana}" target="_blank" style="text-decoration: none;">
             <button style="
                 background-color: #25D366;
@@ -139,112 +200,171 @@ with tab_campana:
                 📲 Enviar Texto por WhatsApp
             </button>
         </a>
-        """, unsafe_allow_html=True)
-        st.caption("💡 Tip: Presiona el botón para abrir WhatsApp directamente con el texto listo.")
+        """,
+        unsafe_allow_html=True,
+    )
+    st.caption(
+        "💡 Tip: Presiona el botón para abrir WhatsApp directamente con el"
+        " texto listo."
+    )
 
 # ---------------------------------------------------------
 # PESTAÑA 2: BUSCADOR GENERAL DE INVENTARIO
 # ---------------------------------------------------------
 with tab_inventario:
-    if not df.empty:
-        st.markdown("### 🔍 Búsqueda Directa")
-        busqueda_directa = st.text_input("Busca por SKU, nombre de mascarilla o palabra clave:", "")
+  if not df.empty:
+    st.markdown("### 🔍 Búsqueda Directa")
+    busqueda_directa = st.text_input(
+        "Busca por SKU, nombre de mascarilla o palabra clave:", ""
+    )
 
-        if busqueda_directa.strip():
-            mask = df.astype(str).apply(lambda row: row.str.contains(busqueda_directa, case=False, na=False)).any(axis=1)
-            df_filtrado = df[mask]
-        else:
-            st.markdown("### 🚘 Filtrar por Vehículo")
-            col1, col2, col3 = st.columns(3)
+    if busqueda_directa.strip():
+      mask = (
+          df.astype(str)
+          .apply(
+              lambda row: row.str.contains(
+                  busqueda_directa, case=False, na=False
+              )
+          )
+          .any(axis=1)
+      )
+      df_filtrado = df[mask]
+    else:
+      st.markdown("### 🚘 Filtrar por Vehículo")
+      col1, col2, col3 = st.columns(3)
 
-            with col1:
-                marcas = sorted([m for m in df["Marca"].dropna().unique() if str(m).strip()]) if "Marca" in df.columns else []
-                marca_sel = st.selectbox("1. Marca", ["Todas"] + marcas)
+      with col1:
+        marcas = (
+            sorted([
+                m for m in df["Marca"].dropna().unique() if str(m).strip()
+            ])
+            if "Marca" in df.columns
+            else []
+        )
+        marca_sel = st.selectbox("1. Marca", ["Todas"] + marcas)
 
-            df_f1 = df if marca_sel == "Todas" or "Marca" not in df.columns else df[df["Marca"] == marca_sel]
+      df_f1 = (
+          df
+          if marca_sel == "Todas" or "Marca" not in df.columns
+          else df[df["Marca"] == marca_sel]
+      )
 
-            with col2:
-                modelos = sorted([m for m in df_f1["Modelo"].dropna().unique() if str(m).strip()]) if "Modelo" in df_f1.columns else []
-                modelo_sel = st.selectbox("2. Modelo", ["Todos"] + modelos)
+      with col2:
+        modelos = (
+            sorted([
+                m for m in df_f1["Modelo"].dropna().unique() if str(m).strip()
+            ])
+            if "Modelo" in df_f1.columns
+            else []
+        )
+        modelo_sel = st.selectbox("2. Modelo", ["Todos"] + modelos)
 
-            df_f2 = df_f1 if modelo_sel == "Todos" or "Modelo" not in df_f1.columns else df_f1[df_f1["Modelo"] == modelo_sel]
+      df_f2 = (
+          df_f1
+          if modelo_sel == "Todos" or "Modelo" not in df_f1.columns
+          else df_f1[df_f1["Modelo"] == modelo_sel]
+      )
 
-            with col3:
-                anio_sel = st.number_input("3. Año del Vehículo", min_value=1980, max_value=2030, value=2016)
+      with col3:
+        anio_sel = st.number_input(
+            "3. Año del Vehículo", min_value=1980, max_value=2030, value=2016
+        )
 
-            if "Año Inicial" in df_f2.columns and "Año Final" in df_f2.columns:
-                df_filtrado = df_f2[
-                    (df_f2["Año Inicial"] <= anio_sel) &
-                    (df_f2["Año Final"] >= anio_sel)
-                ]
+      if "Año Inicial" in df_f2.columns and "Año Final" in df_f2.columns:
+        df_filtrado = df_f2[
+            (df_f2["Año Inicial"] <= anio_sel) & (df_f2["Año Final"] >= anio_sel)
+        ]
+      else:
+        df_filtrado = df_f2
+
+    st.divider()
+    st.subheader(f"📦 Mascarillas Encontradas ({len(df_filtrado)})")
+
+    if df_filtrado.empty:
+      st.info(
+          "No se encontraron mascarillas compatibles con los criterios"
+          " seleccionados."
+      )
+    else:
+      for _, row in df_filtrado.iterrows():
+        with st.container():
+          producto_nombre = row.get(
+              "Producto / Descripción", row.get("Producto", "Mascarilla")
+          )
+          anio_in = row.get("Año Inicial", "")
+          anio_fin = row.get("Año Final", "")
+          st.markdown(f"#### {producto_nombre} ({anio_in}-{anio_fin})")
+
+          col_img1, col_img2, col_img3 = st.columns(3)
+
+          with col_img1:
+            url_img1 = str(row.get("URL Imagen 1 (Principal)", "")).strip()
+            if url_img1 and url_img1.startswith("http"):
+              st.image(
+                  url_img1, caption="Principal", use_container_width=True
+              )
             else:
-                df_filtrado = df_f2
+              st.caption("📷 Sin Imagen 1")
 
-        st.divider()
-        st.subheader(f"📦 Mascarillas Encontradas ({len(df_filtrado)})")
+          with col_img2:
+            url_img2 = str(row.get("URL Imagen 2 (Exhibición)", "")).strip()
+            if url_img2 and url_img2.startswith("http"):
+              st.image(
+                  url_img2, caption="Exhibición", use_container_width=True
+              )
+            else:
+              st.caption("📷 Sin Imagen 2")
 
-        if df_filtrado.empty:
-            st.info("No se encontraron mascarillas compatibles con los criterios seleccionados.")
-        else:
-            for _, row in df_filtrado.iterrows():
-                with st.container():
-                    producto_nombre = row.get("Producto / Descripción", row.get("Producto", "Mascarilla"))
-                    anio_in = row.get('Año Inicial', '')
-                    anio_fin = row.get('Año Final', '')
-                    st.markdown(f"#### {producto_nombre} ({anio_in}-{anio_fin})")
+          with col_img3:
+            url_img3 = str(row.get("URL Imagen 3 (Instalada)", "")).strip()
+            if url_img3 and url_img3.startswith("http"):
+              st.image(
+                  url_img3, caption="Instalada", use_container_width=True
+              )
+            else:
+              st.caption("📷 Sin Imagen 3")
 
-                    col_img1, col_img2, col_img3 = st.columns(3)
+          col_info_detalles, col_action_wa = st.columns([3, 1])
 
-                    with col_img1:
-                        url_img1 = str(row.get("URL Imagen 1 (Principal)", "")).strip()
-                        if url_img1 and url_img1.startswith("http"):
-                            st.image(url_img1, caption="Principal", use_container_width=True)
-                        else:
-                            st.caption("📷 Sin Imagen 1")
+          with col_info_detalles:
+            st.write(
+                f"🚗 **Compatibilidad:** {row.get('Marca', '')}"
+                f" {row.get('Modelo', '')}"
+            )
+            st.write(
+                f"🏷️ **SKU:** {row.get('SKU / Código', 'N/A')} | 💵 **Precio:**"
+                f" ${row.get('Precio ($)', row.get('Precio', '0.00'))}"
+            )
+            if pd.notna(row.get("Ubicación Almacén")):
+              st.caption(f"📍 Ubicación: {row['Ubicación Almacén']}")
 
-                    with col_img2:
-                        url_img2 = str(row.get("URL Imagen 2 (Exhibición)", "")).strip()
-                        if url_img2 and url_img2.startswith("http"):
-                            st.image(url_img2, caption="Exhibición", use_container_width=True)
-                        else:
-                            st.caption("📷 Sin Imagen 2")
+          with col_action_wa:
+            texto_msj = (
+                "¡Hola! 👋 Le comparto las imágenes de la"
+                f" *{producto_nombre}* para tu {row.get('Marca', '')}"
+                f" {row.get('Modelo', '')} que me consulto:\n\n💰 **Precio:**"
+                f" ${row.get('Precio ($)', row.get('Precio', '0.00'))}\n🔢"
+                f" **Código/SKU:** {row.get('SKU / Código', 'N/A')}\n\nAquí puedes"
+                " ver cómo es y cómo queda:\n"
+            )
 
-                    with col_img3:
-                        url_img3 = str(row.get("URL Imagen 3 (Instalada)", "")).strip()
-                        if url_img3 and url_img3.startswith("http"):
-                            st.image(url_img3, caption="Instalada", use_container_width=True)
-                        else:
-                            st.caption("📷 Sin Imagen 3")
+            if url_img1 and url_img1.startswith("http"):
+              texto_msj += f"1️⃣ *Producto:* {url_img1}\n"
+            if url_img2 and url_img2.startswith("http"):
+              texto_msj += f"2️⃣ *Exhibición:* {url_img2}\n"
+            if url_img3 and url_img3.startswith("http"):
+              texto_msj += f"3️⃣ *Instalada:* {url_img3}\n"
 
-                    col_info_detalles, col_action_wa = st.columns([3, 1])
+            texto_msj += (
+                "\n¿Te gustaría coordinar el envío o la instalación? Quedo"
+                " atento. 🚗💨"
+            )
 
-                    with col_info_detalles:
-                        st.write(f"🚗 **Compatibilidad:** {row.get('Marca', '')} {row.get('Modelo', '')}")
-                        st.write(f"🏷️ **SKU:** {row.get('SKU / Código', 'N/A')} | 💵 **Precio:** ${row.get('Precio ($)', row.get('Precio', '0.00'))}")
-                        if pd.notna(row.get("Ubicación Almacén")):
-                            st.caption(f"📍 Ubicación: {row['Ubicación Almacén']}")
+            texto_encoded = urllib.parse.quote(texto_msj)
+            link_wa = f"https://api.whatsapp.com/send?text={texto_encoded}"
 
-                    with col_action_wa:
-                        texto_msj = (
-                            f"¡Hola! 👋 Le comparto las imágenes de la *{producto_nombre}* para tu {row.get('Marca', '')} {row.get('Modelo', '')} que me consulto:\n\n"
-                            f"💰 *Precio:* ${row.get('Precio ($)', row.get('Precio', '0.00'))}\n"
-                            f"🔢 *Código/SKU:* {row.get('SKU / Código', 'N/A')}\n\n"
-                            f"Aquí puedes ver cómo es y cómo queda:\n"
-                        )
-
-                        if url_img1 and url_img1.startswith("http"):
-                            texto_msj += f"1️⃣ *Producto:* {url_img1}\n"
-                        if url_img2 and url_img2.startswith("http"):
-                            texto_msj += f"2️⃣ *Exhibición:* {url_img2}\n"
-                        if url_img3 and url_img3.startswith("http"):
-                            texto_msj += f"3️⃣ *Instalada:* {url_img3}\n"
-
-                        texto_msj += "\n¿Te gustaría coordinar el envío o la instalación? Quedo atento. 🚗💨"
-
-                        texto_encoded = urllib.parse.quote(texto_msj)
-                        link_wa = f"https://api.whatsapp.com/send?text={texto_encoded}"
-
-                        st.markdown(f"""
+            st.markdown(
+                f"""
                         <a href="{link_wa}" target="_blank" style="text-decoration: none;">
                             <button style="
                                 background-color: #e62117;
@@ -260,6 +380,8 @@ with tab_inventario:
                                 📲 Enviar 3 Fotos por WhatsApp
                             </button>
                         </a>
-                        """, unsafe_allow_html=True)
+                        """,
+                unsafe_allow_html=True,
+            )
 
-                    st.divider()
+          st.divider()
