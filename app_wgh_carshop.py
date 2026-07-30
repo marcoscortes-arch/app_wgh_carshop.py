@@ -1,3 +1,4 @@
+import urllib.parse
 import pandas as pd
 import streamlit as st
 
@@ -15,12 +16,11 @@ st.subheader("Buscador y filtros para vendedores")
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1IaHxrsTMgm3SRjpdLOnpx8hpwV0MhL97/export?format=csv"
 
 
-@st.cache_data(ttl=60)  # Se actualiza automáticamente cada 60 segundos
+@st.cache_data(ttl=60)
 def cargar_inventario():
     try:
         df = pd.read_csv(SHEET_URL)
         df.columns = df.columns.str.strip()
-        # Asegurar que todas las celdas sean tratadas adecuadamente
         return df.fillna("")
     except Exception as e:
         st.error(f"Error al conectar con la plantilla de Google Sheets: {e}")
@@ -38,7 +38,6 @@ if not df.empty:
     col_f1, col_f2 = st.columns(2)
     col_f3, col_f4 = st.columns(2)
 
-    # Detección inteligente de columnas en tu Google Sheet
     def obtener_opciones(col_names):
         for col in col_names:
             if col in df.columns:
@@ -70,7 +69,6 @@ if not df.empty:
     with col_f4:
         sel_categoria = st.selectbox("🏷️ Categoría:", opciones_categoria)
 
-    # Buscador de texto libre adicional
     busqueda = st.text_input(
         "🔎 Buscar por descripción o código (opcional):", ""
     )
@@ -109,10 +107,9 @@ if not df.empty:
     st.caption(f"Mostrando {len(df_filtrado)} resultado(s)")
 
     # ---------------------------------------------------------
-    # MOSTRAR RESULTADOS
+    # RESULTADOS Y BOTÓN DE ENVÍO
     # ---------------------------------------------------------
     for idx, row in df_filtrado.iterrows():
-        # Captura de campos
         producto = str(
             row.get(
                 "Producto / Descripción",
@@ -135,13 +132,9 @@ if not df.empty:
         col_detalles, col_fotos = st.columns([1, 1])
 
         with col_detalles:
-            # Info detallada del repuesto
             info_text = f"* 🏷️ **Código / SKU:** `{sku}`\n"
             if marca or modelo or anio:
-                info_text += (
-                    f"* 🚗 **Vehículo:** {marca} {modelo} ({anio})\n".strip()
-                    + "\n"
-                )
+                info_text += f"* 🚗 **Vehículo:** {marca} {modelo} ({anio})\n"
             if categoria:
                 info_text += f"* 📁 **Categoría:** {categoria}\n"
             info_text += f"* 💵 **Precio Oferta:** ${precio_raw}\n"
@@ -150,12 +143,27 @@ if not df.empty:
 
             st.info(info_text)
 
-            mensaje = f"¡Hola! Disponemos de *{producto}* en oferta por *${precio_raw}* + envío. Pago contra entrega por Servientrega. ¿Desea coordinar el pedido?"
+            # Redactar mensaje para el cliente
+            mensaje_cliente = (
+                f"¡Hola! Disponemos de *{producto}*\n"
+                f"🏷️ *Oferta:* ${precio_raw} + $10.00 de envío\n"
+                f"📦 *Pago:* Contra entrega por Servientrega.\n"
+                f"¿Desea confirmar su pedido?"
+            )
+
             st.text_area(
-                "📋 Copiar texto para el cliente:",
-                value=mensaje,
-                height=90,
+                "📋 Texto para copiar rápido:",
+                value=mensaje_cliente,
+                height=110,
                 key=f"txt_{idx}",
+            )
+
+            # BOTÓN DE ENVÍO DIRECTO A WHATSAPP
+            msg_encoded = urllib.parse.quote(mensaje_cliente)
+            link_wa = f"https://api.whatsapp.com/send?text={msg_encoded}"
+
+            st.link_button(
+                "📲 Enviar por WhatsApp", link_wa, use_container_width=True
             )
 
         with col_fotos:
