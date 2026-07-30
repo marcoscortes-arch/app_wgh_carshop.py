@@ -1,9 +1,10 @@
+import base64
 import urllib.parse
 import pandas as pd
 import requests
 import streamlit as st
 
-# Configuración de la app
+# Configuración de la interfaz
 st.set_page_config(
     page_title="W.G.H. Car Shop - Catálogo Vendedores",
     page_icon="🚗",
@@ -13,7 +14,6 @@ st.set_page_config(
 st.title("🚗 W.G.H. Car Shop - Catálogo Digital")
 st.subheader("Buscador de repuestos y recursos para WhatsApp Business")
 
-# URL de tu plantilla de Google Sheets
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1IaHxrsTMgm3SRjpdLOnpx8hpwV0MhL97/export?format=csv"
 
 
@@ -30,9 +30,6 @@ def cargar_inventario():
 df = cargar_inventario()
 
 if not df.empty:
-    # ---------------------------------------------------------
-    # FILTROS EN CASCADA / BÚSQUEDA INTELLIGENTE
-    # ---------------------------------------------------------
     st.markdown("### 🔍 Filtros de Búsqueda")
 
     col_f1, col_f2 = st.columns(2)
@@ -73,7 +70,6 @@ if not df.empty:
         "🔎 Buscar por descripción o código (opcional):", ""
     )
 
-    # Filtrar datos
     df_filtrado = df.copy()
 
     if col_marca and sel_marca != "Todos":
@@ -106,9 +102,6 @@ if not df.empty:
     st.markdown("---")
     st.caption(f"Mostrando {len(df_filtrado)} resultado(s)")
 
-    # ---------------------------------------------------------
-    # PRODUCTOS Y BOTONES DE RECURSOS
-    # ---------------------------------------------------------
     for idx, row in df_filtrado.iterrows():
         producto = str(
             row.get(
@@ -126,7 +119,7 @@ if not df.empty:
         modelo = str(row.get("Modelo", row.get("MODELO", "")))
         anio = str(row.get("Año", row.get("AÑO", "")))
 
-        # Extraer URLs de fotos
+        # Extraer enlaces de fotos
         cols_img = [
             c
             for c in df.columns
@@ -163,7 +156,6 @@ if not df.empty:
             * 💳 **Pago:** Contra entrega
             """)
 
-            # Mensaje para el cliente
             mensaje_cliente = (
                 f"¡Hola! Disponemos de *{producto}*\n"
                 f"🏷️ *Oferta:* ${precio_raw} + $10.00 de envío\n"
@@ -178,36 +170,26 @@ if not df.empty:
                 key=f"txt_{idx}",
             )
 
-            # Botón directo para enviar texto a WhatsApp
+            # Botón de envío a WhatsApp
             msg_encoded = urllib.parse.quote(mensaje_cliente)
             link_wa = f"https://api.whatsapp.com/send?text={msg_encoded}"
             st.link_button(
-                "📲 1. Enviar Texto a WhatsApp",
-                link_wa,
-                use_container_width=True,
+                "📲 Enviar Texto a WhatsApp", link_wa, use_container_width=True
             )
 
         with col_fotos:
-            st.markdown("**📷 Descarga rápida de fotos:**")
+            st.markdown("**📷 Fotos del repuesto:**")
 
             if links_fotos:
                 for num, img_url in enumerate(links_fotos, 1):
                     st.image(img_url, use_container_width=True)
 
-                    # Descarga directa de la imagen para adjuntar nativamente
-                    try:
-                        res = requests.get(img_url, timeout=5)
-                        if res.status_code == 200:
-                            st.download_button(
-                                label=f"📥 Descargar Foto {num} al Teléfono",
-                                data=res.content,
-                                file_name=f"{sku}_foto_{num}.jpg",
-                                mime="image/jpeg",
-                                key=f"dl_{idx}_{num}",
-                                use_container_width=True,
-                            )
-                    except Exception:
-                        pass
+                    # Botón de apertura/descarga directa asegurada
+                    st.link_button(
+                        f"📥 Abrir / Guardar Foto {num}",
+                        img_url,
+                        use_container_width=True,
+                    )
             else:
                 st.caption("📷 Sin imágenes configuradas.")
 
