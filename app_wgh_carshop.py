@@ -408,10 +408,9 @@ with col_der:
         marca_sel, modelo_sel, info['producto'], precio_final, info['anos'], lista_imagenes
     )
 
-    # 1. Muestra del afiche
+    # 1. AFICHE Y DESCARGA
     st.image(buffer_banner, caption="Vista previa de afiche para WhatsApp", use_container_width=True)
 
-    # 2. Descarga del afiche
     st.download_button(
         label="📥 Descargar Afiche de Oferta (JPEG)",
         data=buffer_banner,
@@ -422,8 +421,8 @@ with col_der:
 
     st.markdown("---")
     
-    # 3. Bloque de Cierre de Venta (Pago Contra Entrega)
-    st.subheader("🤝 Cierre de Venta (Pago Contra Entrega)")
+    # 2. ENCABEZADO Y TEXTO DE CIERRE
+    st.subheader("💬 Cierre de Venta (Envío Contra Entrega)")
     st.info("🚛 **Servientrega:** Envíos seguros con pago al recibir el producto.")
     
     mensaje_cierre = f"""¡Saludos! Le comparto los detalles para concretar su pedido de *{marca_sel} {modelo_sel}* ({info['producto']}):
@@ -438,8 +437,36 @@ Para emitir la guía de remisión, por favor ayúdenos con los siguientes datos:
 
 ¡Apenas nos confirme los datos, preparamos y despachamos su paquete! 🚘"""
 
-    st.text_area("Texto de cierre (listo para copiar):", value=mensaje_cierre, height=210)
+    st.text_area("Texto listo para copiar y enviar al cliente:", value=mensaje_cierre, height=210)
 
+    # 3. CAMPO DE TELÉFONO (UN SOLO INPUT)
+    telefono = st.text_input("Número del cliente (opcional, ej: 593991234567)", value="", key="input_telefono_cliente")
+    
+    # 4. BOTÓN DE ENVÍO POR WHATSAPP
+    mensaje_encoded = urllib.parse.quote(mensaje_cierre)
+    url_wa_texto = f"https://wa.me/{telefono.strip()}?text={mensaje_encoded}" if telefono.strip() else f"https://wa.me/?text={mensaje_encoded}"
+
+    st.markdown(
+        f"""
+        <a href="{url_wa_texto}" target="_blank">
+            <button style="
+                background-color: #25D366;
+                color: white;
+                border: none;
+                padding: 14px 20px;
+                font-size: 16px;
+                font-weight: bold;
+                border-radius: 8px;
+                cursor: pointer;
+                width: 100%;
+                margin-top: 10px;
+            ">
+                📲 Enviar Cierre de Venta por WhatsApp
+            </button>
+        </a>
+        """,
+        unsafe_allow_html=True
+    )
     # 4. Input de teléfono con KEY ÚNICO para evitar StreamlitDuplicateElementId
     telefono = st.text_input("Número del cliente (opcional, ej: 593991234567)", value="", key="telefono_cliente")
     
