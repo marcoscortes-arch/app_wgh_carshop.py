@@ -413,7 +413,7 @@ with col_der:
     st.markdown("---")
     
     telefono = st.text_input("Número del cliente (opcional, ej: 593991234567)", value="")
-    mensaje_texto = f"📌 *W.G.H CAR SHOP* | Adjunto la ficha de oferta para *{marca_sel} {modelo_sel}* (${precio_final:.2f} USD). ¡Revisa el afiche adjunto!"
+    mensaje_texto = f"📌 *W.G.H CAR SHOP* | Le comparto la ficha de oferta para *{marca_sel} {modelo_sel}* (${precio_final:.2f} USD). ¡Revisa el afiche adjunto!"
     mensaje_encoded = urllib.parse.quote(mensaje_texto)
     url_wa_texto = f"https://wa.me/{telefono.strip()}?text={mensaje_encoded}" if telefono.strip() else f"https://wa.me/?text={mensaje_encoded}"
 
