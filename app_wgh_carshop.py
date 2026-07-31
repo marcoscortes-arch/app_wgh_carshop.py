@@ -4,14 +4,15 @@ import os
 from PIL import Image, ImageDraw, ImageFont
 import io
 
+# 1. Base de datos de repuestos
 PRECIOS_CATALOGO = {
     "CHEVROLET": {
         "D-MAX (2014-2018)": [
             {
-                "producto": "Mascarilla D-Max (2014-2018)", 
+                "producto": "Mascarilla D-Max", 
                 "anos": "2014-2018", 
                 "precio": 175.0, 
-                "obs": "Modelos disponibles: Con Luces, Exhibición y QuCLuces", 
+                "obs": "Incluye Kit de Luces LED", 
                 "imagenes": [
                     "fotos/chevrolet_dmax_Mascarilla20142018CLuces.jpeg",
                     "fotos/chevrolet_dmax_Mascarilla20142018ExCLuces.jpeg",
@@ -22,50 +23,91 @@ PRECIOS_CATALOGO = {
     }
 }
 
-def crear_ficha_consolidada(marca, modelo, producto, precio, anos, lista_rutas):
-    """Crea una sola imagen uniendo las fotos y los datos de la cotización"""
-    # Crear lienzo base (ancho 800px, alto dinámico)
-    ancho_lienzo = 800
-    alto_cabecera = 220
-    alto_foto = 450
-    
-    # Filtrar solo imágenes existentes
-    imgs_validas = [r for r in lista_rutas if os.path.exists(r)]
-    num_imgs = len(imgs_validas) if len(imgs_validas) > 0 else 1
-    
-    alto_total = alto_cabecera + (alto_foto * num_imgs)
-    lienzo = Image.new("RGB", (ancho_lienzo, alto_total), color=(20, 20, 20))
+def generar_banner_cuadrado(marca, modelo, producto, precio, anos, lista_rutas):
+    """
+    Genera una sola imagen cuadrada estilo afiche publicitario (1080x1080 px)
+    con tipografía grande y distribución nítida.
+    """
+    ANCHO, ALTO = 1080, 1080
+    lienzo = Image.new("RGB", (ANCHO, ALTO), color=(15, 15, 15))
     draw = ImageDraw.Draw(lienzo)
-    
-    # Dibujar Cabecera
-    draw.rectangle([(0, 0), (ancho_lienzo, alto_cabecera)], fill=(15, 15, 15))
-    draw.rectangle([(0, alto_cabecera - 5), (ancho_lienzo, alto_cabecera)], fill=(217, 4, 41)) # Línea roja
-    
-    # Textos de la oferta
-    draw.text((30, 20), "W.G.H CAR SHOP - FICHA DE OFERTA", fill=(255, 255, 255))
-    draw.text((30, 60), f"Vehículo: {marca} {modelo}", fill=(220, 220, 220))
-    draw.text((30, 95), f"Repuesto: {producto}", fill=(220, 220, 220))
-    draw.text((30, 130), f"Años: {anos}", fill=(220, 220, 220))
-    draw.text((30, 165), f"PRECIO ESPECIAL: ${precio:.2f} USD", fill=(37, 211, 102))
 
-    # Pegar las imágenes una debajo de otra
-    y_offset = alto_cabecera + 10
-    for ruta in imgs_validas:
-        img = Image.open(ruta).convert("RGB")
-        # Escalar imagen manteniendo proporción
-        img.thumbnail((ancho_lienzo - 40, alto_foto - 20))
-        x_offset = (ancho_lienzo - img.width) // 2
-        lienzo.paste(img, (x_offset, y_offset))
-        y_offset += alto_foto
+    # 1. Franja Superior (Cabecera Publicitaria)
+    ALTO_CABECERA = 240
+    draw.rectangle([(0, 0), (ANCHO, ALTO_CABECERA)], fill=(20, 20, 20))
+    draw.rectangle([(0, ALTO_CABECERA - 8), (ANCHO, ALTO_CABECERA)], fill=(217, 4, 41)) # Línea roja de marca
 
-    # Guardar en buffer de memoria optimizado (JPEG liviano)
+    # Cargar tipografía por defecto o personalizada
+    try:
+        font_titulo = ImageFont.truetype("arial.ttf", 46)
+        font_sub = ImageFont.truetype("arial.ttf", 36)
+        font_precio = ImageFont.truetype("arial.ttf", 52)
+    except IOError:
+        font_titulo = font_sub = font_precio = ImageFont.load_default()
+
+    # Textos de la Oferta
+    draw.text((40, 25), "W.G.H CAR SHOP", fill=(217, 4, 41), font=font_titulo)
+    draw.text((40, 85), f"{marca} {modelo} ({anos})", fill=(255, 255, 255), font=font_sub)
+    draw.text((40, 135), f"REPUESTO: {producto.upper()}", fill=(200, 200, 200), font=font_sub)
+    
+    # Caja destacada para el Precio
+    draw.rectangle([(ANCHO - 380, 30), (ANCHO - 40, 180)], fill=(37, 211, 102))
+    draw.text((ANCHO - 360, 50), "OFERTA", fill=(0, 0, 0), font=font_sub)
+    draw.text((ANCHO - 360, 100), f"${precio:.2f}", fill=(0, 0, 0), font=font_precio)
+
+    # 2. Organización Mosaico de Fotografías (Grid)
+    imgs_validas = [r for r in lista_rutas if os.path.exists(r)]
+    num_imgs = len(imgs_validas)
+
+    y_inicio = ALTO_CABECERA + 15
+    alto_disponible = ALTO - y_inicio - 20
+    ancho_disponible = ANCHO - 40
+
+    if num_imgs == 1:
+        # 1 foto centrada grande
+        img = Image.open(imgs_validas[0]).convert("RGB")
+        img.thumbnail((ancho_disponible, alto_disponible))
+        x = (ANCHO - img.width) // 2
+        lienzo.paste(img, (x, y_inicio))
+
+    elif num_imgs == 2:
+        # 2 fotos lado a lado
+        w_box = (ancho_disponible // 2) - 10
+        for i, ruta in enumerate(imgs_validas[:2]):
+            img = Image.open(ruta).convert("RGB")
+            img.thumbnail((w_box, alto_disponible))
+            x = 20 + i * (w_box + 20)
+            lienzo.paste(img, (x, y_inicio))
+
+    elif num_imgs >= 3:
+        # 3 fotos: 1 principal grande a la izquierda, 2 secundarias a la derecha
+        w_izq = (ancho_disponible // 2) - 10
+        h_der = (alto_disponible // 2) - 10
+
+        # Foto 1 (Izquierda)
+        img1 = Image.open(imgs_validas[0]).convert("RGB")
+        img1.thumbnail((w_izq, alto_disponible))
+        lienzo.paste(img1, (20, y_inicio))
+
+        # Foto 2 (Derecha Arriba)
+        img2 = Image.open(imgs_validas[1]).convert("RGB")
+        img2.thumbnail((w_izq, h_der))
+        lienzo.paste(img2, (20 + w_izq + 20, y_inicio))
+
+        # Foto 3 (Derecha Abajo)
+        img3 = Image.open(imgs_validas[2]).convert("RGB")
+        img3.thumbnail((w_izq, h_der))
+        lienzo.paste(img3, (20 + w_izq + 20, y_inicio + h_der + 20))
+
+    # Guardar en memoria RAM optimizado
     buffer = io.BytesIO()
-    lienzo.save(buffer, format="JPEG", quality=85)
+    lienzo.save(buffer, format="JPEG", quality=88)
     buffer.seek(0)
     return buffer
 
+# --- INTERFAZ STREAMLIT ---
 st.set_page_config(page_title="Cotizador W.G.H CarShop", layout="wide")
-st.title("📦 Cotizador y Gestor de Ofertas")
+st.title("📦 Cotizador y Creador de Ofertas")
 
 col1, col2, col3 = st.columns(3)
 with col1:
@@ -96,7 +138,7 @@ with col_izq:
         step=5.0
     )
 
-    st.markdown("### 🖼️ Galería de Fotografías")
+    st.markdown("### 🖼️ Galería Individual")
     lista_imagenes = info.get("imagenes", [])
     if lista_imagenes:
         tabs = st.tabs([f"Foto {i+1}" for i in range(len(lista_imagenes))])
@@ -107,21 +149,20 @@ with col_izq:
                     st.image(ruta_img, use_column_width=True)
 
 with col_der:
-    st.subheader("🖼️ Generar Imagen de Oferta Única")
-    st.info("Genera un banner liviano consolidado listo para enviar a tus clientes.")
+    st.subheader("🖼️ Afiche de Oferta Consolidado (1080x1080)")
     
-    # Generar la imagen consolidada
-    buffer_imagen = crear_ficha_consolidada(
+    # Generar el banner cuadrado
+    buffer_banner = generar_banner_cuadrado(
         marca_sel, modelo_sel, info['producto'], precio_final, info['anos'], lista_imagenes
     )
 
-    # Mostrar la previsualización de la imagen única generada
-    st.image(buffer_imagen, caption="Ficha Consolidada Lista para WhatsApp", use_column_width=True)
+    # Previsualización
+    st.image(buffer_banner, caption="Vista previa del banner publicitario para WhatsApp", use_column_width=True)
 
     # Botón de Descarga
     st.download_button(
-        label="📥 Descargar Imagen de Oferta (para enviar por WhatsApp)",
-        data=buffer_imagen,
+        label="📥 Descargar Afiche de Oferta (JPEG)",
+        data=buffer_banner,
         file_name=f"Oferta_{marca_sel}_{modelo_sel}.jpg",
         mime="image/jpeg",
         use_container_width=True
@@ -129,9 +170,8 @@ with col_der:
 
     st.markdown("---")
     
-    # Mensaje corto de acompañamiento
     telefono = st.text_input("Número del cliente (opcional, ej: 593991234567)", value="")
-    mensaje_texto = f"📌 Hola! Te adjunto la ficha de oferta de *{marca_sel} {modelo_sel}* (${precio_final:.2f} USD). ¡Revisa la imagen adjunta!"
+    mensaje_texto = f"📌 *W.G.H CAR SHOP* | Adjunto la ficha de oferta para *{marca_sel} {modelo_sel}* (${precio_final:.2f} USD). ¡Revisa el afiche adjunto!"
     mensaje_encoded = urllib.parse.quote(mensaje_texto)
     url_wa_texto = f"https://wa.me/{telefono.strip()}?text={mensaje_encoded}" if telefono.strip() else f"https://wa.me/?text={mensaje_encoded}"
 
@@ -142,14 +182,14 @@ with col_der:
                 background-color: #25D366;
                 color: white;
                 border: none;
-                padding: 12px 20px;
-                font-size: 15px;
+                padding: 14px 20px;
+                font-size: 16px;
                 font-weight: bold;
                 border-radius: 8px;
                 cursor: pointer;
                 width: 100%;
             ">
-                📲 Abrir WhatsApp y Adjuntar Imagen
+                📲 Abrir WhatsApp y Adjuntar Afiche
             </button>
         </a>
         """,
