@@ -404,24 +404,26 @@ with col_izq:
 with col_der:
     st.subheader("🖼️ Afiche Publicitario Generado (1080x1080)")
     
+    # 1. Generar e Imprimir Afiche
     buffer_banner = generar_banner_cuadrado(
         marca_sel, modelo_sel, info['producto'], precio_final, info['anos'], lista_imagenes
     )
 
-    # 1. AFICHE Y DESCARGA
     st.image(buffer_banner, caption="Vista previa de afiche para WhatsApp", use_container_width=True)
 
+    # 2. Botón de Descarga del Afiche
     st.download_button(
         label="📥 Descargar Afiche de Oferta (JPEG)",
         data=buffer_banner,
         file_name=f"Oferta_{marca_sel}_{modelo_sel}.jpg",
         mime="image/jpeg",
-        use_container_width=True
+        use_container_width=True,
+        key="btn_descarga_afiche"
     )
 
     st.markdown("---")
     
-    # 2. ENCABEZADO Y TEXTO DE CIERRE
+    # 3. Sección Única de Cierre de Venta
     st.subheader("💬 Cierre de Venta (Envío Contra Entrega)")
     st.info("🚛 **Servientrega:** Envíos seguros con pago al recibir el producto.")
     
@@ -437,12 +439,12 @@ Para emitir la guía de remisión, por favor ayúdenos con los siguientes datos:
 
 ¡Apenas nos confirme los datos, preparamos y despachamos su paquete! 🚘"""
 
-    st.text_area("Texto listo para copiar y enviar al cliente:", value=mensaje_cierre, height=210)
+    st.text_area("Texto listo para copiar y enviar al cliente:", value=mensaje_cierre, height=210, key="area_cierre_limpia")
 
-    # 3. CAMPO DE TELÉFONO (UN SOLO INPUT)
-    telefono = st.text_input("Número del cliente (opcional, ej: 593991234567)", value="", key="input_telefono_cliente")
+    # 4. Único campo para teléfono del cliente
+    telefono = st.text_input("Número del cliente (opcional, ej: 593991234567)", value="", key="input_telefono_cierre_final")
     
-    # 4. BOTÓN DE ENVÍO POR WHATSAPP
+    # 5. Único botón para enviar WhatsApp
     mensaje_encoded = urllib.parse.quote(mensaje_cierre)
     url_wa_texto = f"https://wa.me/{telefono.strip()}?text={mensaje_encoded}" if telefono.strip() else f"https://wa.me/?text={mensaje_encoded}"
 
