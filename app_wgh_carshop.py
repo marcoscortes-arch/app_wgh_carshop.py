@@ -431,9 +431,25 @@ with col_der:
                 cursor: pointer;
                 width: 100%;
             ">
-                📲 Abrir WhatsApp y Enviar Texto
+                📲 Abrir WhatsApp y Enviar Oferta Inicial
             </button>
         </a>
         """,
         unsafe_allow_html=True
     )
+
+    # Mensaje de Cierre para Contra Entrega (Servientrega)
+    st.markdown("### 💬 Cierre de Venta (Envío Contra Entrega)")
+    mensaje_cierre = f"""¡Saludos! Le comparto: nuestro sistema de trabajo es **pago contra entrega** con la seguridad de Servientrega. 
+
+Una vez que el paquete llegue a su domicilio o agencia, usted realiza el pago al recibirlo. 
+
+Para proceder con la guía de remisión, envíenos los siguientes datos:
+1. Nombre y Apellido
+2. Número de Cédula
+3. Dirección precisa o Agencia de Servientrega preferida
+4. Teléfono
+
+¡Apenas nos confirme los datos, preparamos su paquete! 🚘"""
+
+    st.text_area("Texto listo para copiar y enviar al cliente:", value=mensaje_cierre, height=200)
