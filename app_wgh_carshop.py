@@ -1,7 +1,7 @@
 import streamlit as st
 import urllib.parse
 
-# 1. Base de datos con los precios base exactos del PDF
+# 1. Base de datos con los precios base exactos
 PRECIOS_CATALOGO = {
     "CHEVROLET": {
         "D-MAX": [
@@ -250,14 +250,12 @@ PRECIOS_CATALOGO = {
     }
 }
 
-# Link directo a tu Catálogo de WhatsApp Business
 URL_CATALOGO_GENERAL = "https://wa.me/c/593987278753"
 
-# --- INTERFAZ STREAMLIT ---
 st.set_page_config(page_title="Cotizador & WhatsApp Business", layout="wide")
 st.title("📦 Cotizador y Gestor de Ofertas")
 
-# 1. Pestañas / Menús de Selección
+# 1. Menús de Selección
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -271,7 +269,7 @@ with col3:
     productos_disponibles = [item["producto"] for item in PRECIOS_CATALOGO[marca_sel][modelo_sel]]
     producto_sel = st.selectbox("3. Repuesto", productos_disponibles)
 
-# Obtener los datos del producto
+# Obtener los datos base del producto
 detalles = PRECIOS_CATALOGO[marca_sel][modelo_sel]
 info = next(item for item in detalles if item["producto"] == producto_sel)
 
@@ -286,21 +284,27 @@ with col_izq:
     if info['obs']:
         st.info(f"**Observación:** {info['obs']}")
     
-    st.metric("Precio Oferta", f"${info['precio']:.2f}")
+    # Campo para ajustar o modificar el precio base
+    precio_final = st.number_input(
+        "💵 Precio Final ($ USD):", 
+        min_value=0.0, 
+        value=float(info['precio']), 
+        step=5.0,
+        help="Puedes cambiar este precio si el valor se ha actualizado."
+    )
 
 with col_der:
     st.subheader("📲 Opciones de Envío por WhatsApp")
     
-    # Campo opcional para teléfono
     telefono = st.text_input("Número del cliente (opcional, ej: 593991234567)", value="")
 
-    # Generación de la Ficha Técnica de Texto
+    # Mensaje toma automáticamente el precio_final actualizado
     mensaje_texto = (
         f"📌 *FICHA DE OFERTA*\n\n"
         f"🚘 *Vehículo:* {marca_sel} {modelo_sel}\n"
         f"⚙️ *Repuesto:* {info['producto']}\n"
         f"📅 *Años:* {info['anos']}\n"
-        f"💵 *Precio Oferta:* ${info['precio']:.2f}\n"
+        f"💵 *Precio Oferta:* ${precio_final:.2f}\n"
     )
     if info['obs']:
         mensaje_texto += f"📝 *Nota:* {info['obs']}\n"
@@ -352,4 +356,4 @@ with col_der:
         </a>
         """,
         unsafe_allow_html=True
-    )amente desde tu Catálogo de WhatsApp Business.")
+    )
