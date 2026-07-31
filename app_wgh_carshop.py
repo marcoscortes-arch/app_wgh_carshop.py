@@ -3,7 +3,6 @@ from PIL import Image, ImageDraw, ImageFont
 import urllib.parse
 import io
 import os
-from fpdf import FPDF
 
 # ---------------------------------------------------------
 # 1. CONFIGURACIÓN DE LA PÁGINA
@@ -15,7 +14,7 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------
-# 2. CATÁLOGO BASE DE DATOS (EXTRAÍDO DEL PDF)
+# 2. CATÁLOGO BASE DE DATOS
 # ---------------------------------------------------------
 DATOS_PRODUCTOS = {
     "CHEVROLET": {
@@ -89,7 +88,7 @@ DATOS_PRODUCTOS = {
 }
 
 # ---------------------------------------------------------
-# 3. FUNCIONES DE GENERACIÓN (BANNER Y PDF)
+# 3. FUNCIONES DE GENERACIÓN
 # ---------------------------------------------------------
 def generar_banner_cuadrado(marca, modelo, producto, precio, anos, lista_rutas):
     ANCHO, ALTO = 1080, 1080
@@ -137,39 +136,21 @@ def generar_banner_cuadrado(marca, modelo, producto, precio, anos, lista_rutas):
     buffer.seek(0)
     return buffer
 
-def generar_pdf_oferta(marca, modelo, producto, precio, anos):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", 'B', 16)
-    
-    pdf.set_fill_color(217, 4, 41)
-    pdf.set_text_color(255, 255, 255)
-    pdf.cell(0, 15, "W.G.H CAR SHOP - COTIZACION OFICIAL", ln=True, align='C', fill=True)
-    pdf.ln(10)
-    
-    pdf.set_text_color(0, 0, 0)
-    pdf.set_font("Arial", 'B', 12)
-    pdf.cell(50, 10, "Marca / Modelo:", 0, 0)
-    pdf.set_font("Arial", '', 12)
-    pdf.cell(0, 10, f"{marca} {modelo}", 0, 1)
-    
-    pdf.set_font("Arial", 'B', 12)
-    pdf.cell(50, 10, "Repuesto:", 0, 0)
-    pdf.set_font("Arial", '', 12)
-    pdf.cell(0, 10, f"{producto} ({anos})", 0, 1)
-    
-    pdf.set_font("Arial", 'B', 12)
-    pdf.cell(50, 10, "Precio Oferta:", 0, 0)
-    pdf.set_font("Arial", 'B', 14)
-    pdf.set_text_color(217, 4, 41)
-    pdf.cell(0, 10, f"${precio:.2f} USD", 0, 1)
-    
-    pdf.ln(10)
-    pdf.set_text_color(100, 100, 100)
-    pdf.set_font("Arial", 'I', 10)
-    pdf.multi_cell(0, 6, "Garantia de compatibilidad y calidad. Envios a todo el pais mediante Servientrega con opcion de Pago Contra Entrega.")
-    
-    return pdf.output(dest='S').encode('latin-1')
+def generar_cotizacion_texto(marca, modelo, producto, precio, anos):
+    return f"""========================================
+     W.G.H CAR SHOP - COTIZACIÓN
+========================================
+
+Vehículo: {marca} {modelo}
+Repuesto: {producto} ({anos})
+Precio de Oferta: ${precio:.2f} USD
+
+----------------------------------------
+* Garantía de compatibilidad y calidad.
+* Envíos a todo el país vía Servientrega.
+* Pago contra entrega disponible.
+========================================
+"""
 
 # ---------------------------------------------------------
 # 4. ESTRUCTURA PRINCIPAL DE LA PÁGINA
@@ -178,41 +159,32 @@ st.title("🚘 W.G.H CarShop - Generador de Ofertas")
 
 col_izq, col_der = st.columns([1, 1])
 
-# --- COLUMNA IZQUIERDA: DÁNAMICA DESDE BASE DE DATOS ---
+# --- COLUMNA IZQUIERDA ---
 with col_izq:
     st.subheader("📋 Selección de Producto y Vehículo")
     
-    # 1. Elección Marca
     marca_sel = st.selectbox("Seleccione Marca:", list(DATOS_PRODUCTOS.keys()), key="sel_marca_db")
-    
-    # 2. Elección Modelo
     modelos_disponibles = list(DATOS_PRODUCTOS[marca_sel].keys())
     modelo_sel = st.selectbox("Seleccione Modelo:", modelos_disponibles, key="sel_modelo_db")
     
-    # 3. Elección Repuesto
     productos_lista = DATOS_PRODUCTOS[marca_sel][modelo_sel]
     nombres_prod = [f"{p['producto']} ({p['anos']})" for p in productos_lista]
     
     prod_idx = st.selectbox("Seleccione Repuesto:", range(len(nombres_prod)), format_func=lambda x: nombres_prod[x], key="sel_prod_db")
-    
     prod_seleccionado = productos_lista[prod_idx]
     
-    # Datos seleccionados
     precio_final = st.number_input("Precio Oferta ($):", value=float(prod_seleccionado['precio']), key="input_precio_db")
-    
-    lista_imagenes = ["dmax_1.jpg"] # Imagen base o configurable
+    lista_imagenes = ["dmax_1.jpg"]
 
-# --- COLUMNA DERECHA: AFICHE, PDF Y WHATSAPP ---
+# --- COLUMNA DERECHA ---
 with col_der:
     st.subheader("🖼️ Vista Previa y Descargas")
     
-    # Generar Afiche
     buffer_banner = generar_banner_cuadrado(
         marca_sel, modelo_sel, prod_seleccionado['producto'], precio_final, prod_seleccionado['anos'], lista_imagenes
     )
     st.image(buffer_banner, caption="Afiche generado en tiempo real", use_container_width=True)
 
-    # Botones lado a lado
     c_btn1, c_btn2 = st.columns(2)
     with c_btn1:
         st.download_button(
@@ -224,21 +196,20 @@ with col_der:
             key="btn_dl_afiche"
         )
     with c_btn2:
-        pdf_bytes = generar_pdf_oferta(
+        txt_cotizacion = generar_cotizacion_texto(
             marca_sel, modelo_sel, prod_seleccionado['producto'], precio_final, prod_seleccionado['anos']
         )
         st.download_button(
-            label="📄 Descargar PDF Cotización",
-            data=pdf_bytes,
-            file_name=f"Cotizacion_{marca_sel}_{modelo_sel}.pdf",
-            mime="application/pdf",
+            label="📄 Descargar Cotización (.TXT)",
+            data=txt_cotizacion,
+            file_name=f"Cotizacion_{marca_sel}_{modelo_sel}.txt",
+            mime="text/plain",
             use_container_width=True,
-            key="btn_dl_pdf"
+            key="btn_dl_txt"
         )
 
     st.markdown("---")
     
-    # Cierre de venta
     st.subheader("💬 Cierre de Venta (Pago Contra Entrega)")
     st.info("🚛 **Servientrega:** Envíos seguros con pago al recibir el producto.")
     
