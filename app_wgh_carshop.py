@@ -409,7 +409,7 @@ with col_der:
     )
 
     # 1. Muestra del afiche
-    st.image(buffer_banner, caption="Vista previa de afiche para WhatsApp", use_column_width=True)
+    st.image(buffer_banner, caption="Vista previa de afiche para WhatsApp", use_container_width=True)
 
     # 2. Descarga del afiche
     st.download_button(
@@ -422,7 +422,7 @@ with col_der:
 
     st.markdown("---")
     
-    # 3. Bloque de Cierre de Venta (Justo abajo del afiche)
+    # 3. Bloque de Cierre de Venta (Pago Contra Entrega)
     st.subheader("🤝 Cierre de Venta (Pago Contra Entrega)")
     st.info("🚛 **Servientrega:** Envíos seguros con pago al recibir el producto.")
     
@@ -436,12 +436,12 @@ Para emitir la guía de remisión, por favor ayúdenos con los siguientes datos:
 3. Dirección exacta o Agencia Servientrega preferida:
 4. Teléfono de contacto:
 
-¡Apenas nos confirme los datos, preparamos e despachamos su paquete! 🚘"""
+¡Apenas nos confirme los datos, preparamos y despachamos su paquete! 🚘"""
 
     st.text_area("Texto de cierre (listo para copiar):", value=mensaje_cierre, height=210)
 
-    # 4. Input y Botón de envío directo por WhatsApp
-    telefono = st.text_input("Número del cliente (opcional, ej: 593991234567)", value="")
+    # 4. Input de teléfono con KEY ÚNICO para evitar StreamlitDuplicateElementId
+    telefono = st.text_input("Número del cliente (opcional, ej: 593991234567)", value="", key="telefono_cliente")
     
     mensaje_encoded = urllib.parse.quote(mensaje_cierre)
     url_wa_texto = f"https://wa.me/{telefono.strip()}?text={mensaje_encoded}" if telefono.strip() else f"https://wa.me/?text={mensaje_encoded}"
