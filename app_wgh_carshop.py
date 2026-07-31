@@ -400,8 +400,10 @@ with col_der:
         marca_sel, modelo_sel, info['producto'], precio_final, info['anos'], lista_imagenes
     )
 
+    # 1. Muestra del afiche
     st.image(buffer_banner, caption="Vista previa de afiche para WhatsApp", use_column_width=True)
 
+    # 2. Descarga del afiche
     st.download_button(
         label="📥 Descargar Afiche de Oferta (JPEG)",
         data=buffer_banner,
@@ -410,6 +412,53 @@ with col_der:
         use_container_width=True
     )
 
+    st.markdown("---")
+    
+    # 3. Bloque de Cierre de Venta (Justo abajo del afiche)
+    st.subheader("🤝 Cierre de Venta (Pago Contra Entrega)")
+    st.info("🚛 **Servientrega:** Envíos seguros con pago al recibir el producto.")
+    
+    mensaje_cierre = f"""¡Saludos! Le comparto los detalles para concretar su pedido de *{marca_sel} {modelo_sel}* ({info['producto']}):
+
+Nuestro sistema de trabajo es **pago contra entrega** con la seguridad de **Servientrega**. Una vez que el paquete llegue a su domicilio o agencia, usted realiza el pago directo al recibirlo.
+
+Para emitir la guía de remisión, por favor ayúdenos con los siguientes datos:
+1. Nombre y Apellido:
+2. Número de Cédula:
+3. Dirección exacta o Agencia Servientrega preferida:
+4. Teléfono de contacto:
+
+¡Apenas nos confirme los datos, preparamos e despachamos su paquete! 🚘"""
+
+    st.text_area("Texto de cierre (listo para copiar):", value=mensaje_cierre, height=210)
+
+    # 4. Input y Botón de envío directo por WhatsApp
+    telefono = st.text_input("Número del cliente (opcional, ej: 593991234567)", value="")
+    
+    mensaje_encoded = urllib.parse.quote(mensaje_cierre)
+    url_wa_texto = f"https://wa.me/{telefono.strip()}?text={mensaje_encoded}" if telefono.strip() else f"https://wa.me/?text={mensaje_encoded}"
+
+    st.markdown(
+        f"""
+        <a href="{url_wa_texto}" target="_blank">
+            <button style="
+                background-color: #25D366;
+                color: white;
+                border: none;
+                padding: 14px 20px;
+                font-size: 16px;
+                font-weight: bold;
+                border-radius: 8px;
+                cursor: pointer;
+                width: 100%;
+                margin-top: 10px;
+            ">
+                📲 Enviar Cierre de Venta por WhatsApp
+            </button>
+        </a>
+        """,
+        unsafe_allow_html=True
+    )
     st.markdown("---")
     
     telefono = st.text_input("Número del cliente (opcional, ej: 593991234567)", value="")
