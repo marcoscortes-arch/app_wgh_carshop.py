@@ -2,38 +2,26 @@ import streamlit as st
 import urllib.parse
 import os
 
-# Base de datos configurada con TUS FOTOS REALES subidas a GitHub
+# Base de datos configurada con LISTA de imágenes por producto
 PRECIOS_CATALOGO = {
     "CHEVROLET": {
         "D-MAX (2014-2018)": [
             {
-                "producto": "Mascarilla con Luces", 
+                "producto": "Mascarilla D-Max (2014-2018)", 
                 "anos": "2014-2018", 
                 "precio": 135.0, 
-                "obs": "Incluye kit de luces LED", 
-                "imagen": "fotos/chevrolet_dmax_Mascarilla20142018CLuces.jpeg"
-            },
-            {
-                "producto": "Mascarilla Exhibición", 
-                "anos": "2014-2018", 
-                "precio": 125.0, 
-                "obs": "Modelo de exhibición", 
-                "imagen": "fotos/chevrolet_dmax_Mascarilla20142018ExCLuces.jpeg"
-            },
-            {
-                "producto": "Mascarilla QuCLuces", 
-                "anos": "2014-2018", 
-                "precio": 120.0, 
-                "obs": "", 
-                "imagen": "fotos/chevrolet_dmax_Mascarilla20142018QuCLuces.jpeg"
+                "obs": "Modelos disponibles: Con Luces, Exhibición y QuCLuces", 
+                "imagenes": [
+                    "fotos/chevrolet_dmax_Mascarilla20142018CLuces.jpeg",
+                    "fotos/chevrolet_dmax_Mascarilla20142018ExCLuces.jpeg",
+                    "fotos/chevrolet_dmax_Mascarilla20142018QuCLuces.jpeg"
+                ]
             }
         ]
     }
 }
 
-URL_CATALOGO_GENERAL = "https://wa.me/c/593987278753"
-
-st.set_page_config(page_title="Cotizador & Catálogo", layout="wide")
+st.set_page_config(page_title="Cotizador W.G.H CarShop", layout="wide")
 st.title("📦 Cotizador y Gestor de Ofertas")
 
 # 1. Menús de Selección
@@ -72,14 +60,22 @@ with col_izq:
         step=5.0
     )
 
-    # VISUALIZADOR DE IMAGEN EN STREAMLIT
-    st.markdown("### 🖼️ Fotografía del Producto")
-    ruta_imagen = info.get("imagen", "")
+    # VISUALIZADOR DE MÚLTIPLES IMÁGENES EN STREAMLIT
+    st.markdown("### 🖼️ Galería de Fotografías")
+    lista_imagenes = info.get("imagenes", [])
     
-    if ruta_imagen and os.path.exists(ruta_imagen):
-        st.image(ruta_imagen, caption=f"{info['producto']} - {marca_sel} {modelo_sel}", use_column_width=True)
+    if lista_imagenes:
+        # Pestañas organizadas para visualizar cada variante o ángulo
+        tabs = st.tabs([f"Foto {i+1}" for i in range(len(lista_imagenes))])
+        for idx, tab in enumerate(tabs):
+            with tab:
+                ruta_img = lista_imagenes[idx]
+                if os.path.exists(ruta_img):
+                    st.image(ruta_img, use_column_width=True)
+                else:
+                    st.warning(f"⚠️ Imagen no encontrada: `{ruta_img}`")
     else:
-        st.warning(f"⚠️ No se encontró la imagen en la ruta: `{ruta_imagen}`")
+        st.warning("No hay imágenes asignadas para este repuesto.")
 
 with col_der:
     st.subheader("📲 Opciones de Envío por WhatsApp")
@@ -87,7 +83,7 @@ with col_der:
     telefono = st.text_input("Número del cliente (opcional, ej: 593991234567)", value="")
 
     mensaje_texto = (
-        f"📌 *FICHA DE OFERTA*\n\n"
+        f"📌 *FICHA DE OFERTA - W.G.H CAR SHOP*\n\n"
         f"🚘 *Vehículo:* {marca_sel} {modelo_sel}\n"
         f"⚙️ *Repuesto:* {info['producto']}\n"
         f"📅 *Años:* {info['anos']}\n"
@@ -101,6 +97,7 @@ with col_der:
     mensaje_encoded = urllib.parse.quote(mensaje_texto)
     url_wa_texto = f"https://wa.me/{telefono.strip()}?text={mensaje_encoded}" if telefono.strip() else f"https://wa.me/?text={mensaje_encoded}"
 
+    # Único botón para enviar WhatsApp
     st.markdown(
         f"""
         <a href="{url_wa_texto}" target="_blank">
@@ -108,36 +105,15 @@ with col_der:
                 background-color: #25D366;
                 color: white;
                 border: none;
-                padding: 12px 20px;
-                font-size: 15px;
+                padding: 14px 20px;
+                font-size: 16px;
                 font-weight: bold;
                 border-radius: 8px;
                 cursor: pointer;
                 width: 100%;
-                margin-bottom: 12px;
+                margin-top: 10px;
             ">
                 📲 Enviar Ficha por WhatsApp
-            </button>
-        </a>
-        """,
-        unsafe_allow_html=True
-    )
-
-    st.markdown(
-        f"""
-        <a href="{URL_CATALOGO_GENERAL}" target="_blank">
-            <button style="
-                background-color: #075E54;
-                color: white;
-                border: none;
-                padding: 12px 20px;
-                font-size: 15px;
-                font-weight: bold;
-                border-radius: 8px;
-                cursor: pointer;
-                width: 100%;
-            ">
-                🛍️ Abrir Catálogo de WhatsApp Business
             </button>
         </a>
         """,
