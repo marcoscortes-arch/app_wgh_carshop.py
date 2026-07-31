@@ -250,16 +250,12 @@ PRECIOS_CATALOGO = {
     }
 }
 
-# Imágenes mapeadas por repuesto (puedes añadir URLs o rutas locales)
-IMAGENES_CATALOGO = {
-    "CHEVROLET_D-MAX_Mascarillas Con Luz": [
-        "https://via.placeholder.com/600x400.png?text=D-MAX+Mascarilla+Con+Luz"
-    ]
-}
+# Link directo a tu Catálogo de WhatsApp Business
+URL_CATALOGO_GENERAL = "https://wa.me/c/593987278753"
 
 # --- INTERFAZ STREAMLIT ---
-st.set_page_config(page_title="Cotizador & WhatsApp", layout="wide")
-st.title("📦 Cotizador y Buscador de Catálogo")
+st.set_page_config(page_title="Cotizador & WhatsApp Business", layout="wide")
+st.title("📦 Cotizador y Gestor de Ofertas")
 
 # 1. Pestañas / Menús de Selección
 col1, col2, col3 = st.columns(3)
@@ -275,13 +271,13 @@ with col3:
     productos_disponibles = [item["producto"] for item in PRECIOS_CATALOGO[marca_sel][modelo_sel]]
     producto_sel = st.selectbox("3. Repuesto", productos_disponibles)
 
-# Obtener los datos exactos del PDF
+# Obtener los datos del producto
 detalles = PRECIOS_CATALOGO[marca_sel][modelo_sel]
 info = next(item for item in detalles if item["producto"] == producto_sel)
 
 st.markdown("---")
 
-col_izq, col_der = st.columns([1, 1.2])
+col_izq, col_der = st.columns([1, 1])
 
 with col_izq:
     st.subheader(f"🏷️ Ficha de Oferta: {marca_sel} {modelo_sel}")
@@ -290,14 +286,15 @@ with col_izq:
     if info['obs']:
         st.info(f"**Observación:** {info['obs']}")
     
-    st.metric("Precio de Lista (PDF)", f"${info['precio']:.2f}")
+    st.metric("Precio Oferta", f"${info['precio']:.2f}")
 
-    st.markdown("### 📲 Enviar Oferta al Cliente")
+with col_der:
+    st.subheader("📲 Opciones de Envío por WhatsApp")
     
-    # Campo opcional para ingresar el número de teléfono del cliente
-    telefono = st.text_input("Número de WhatsApp del cliente (ejemplo: 593991234567)", value="")
+    # Campo opcional para teléfono
+    telefono = st.text_input("Número del cliente (opcional, ej: 593991234567)", value="")
 
-    # Construcción del texto formateado para el cliente
+    # Generación de la Ficha Técnica de Texto
     mensaje_texto = (
         f"📌 *FICHA DE OFERTA*\n\n"
         f"🚘 *Vehículo:* {marca_sel} {modelo_sel}\n"
@@ -307,54 +304,52 @@ with col_izq:
     )
     if info['obs']:
         mensaje_texto += f"📝 *Nota:* {info['obs']}\n"
-    
     mensaje_texto += "\n✨ *Producto garantizado. Escríbenos para confirmar tu pedido.*"
 
-    # Codificar el texto para la URL de WhatsApp
     mensaje_encoded = urllib.parse.quote(mensaje_texto)
-    
-    # Construir URL wa.me
-    if telefono.strip():
-        url_wa = f"https://wa.me/{telefono.strip()}?text={mensaje_encoded}"
-    else:
-        url_wa = f"https://wa.me/?text={mensaje_encoded}"
+    url_wa_texto = f"https://wa.me/{telefono.strip()}?text={mensaje_encoded}" if telefono.strip() else f"https://wa.me/?text={mensaje_encoded}"
 
-    # Botón directo para abrir WhatsApp Business
+    # Botón 1: Enviar Ficha Técnica en Texto
     st.markdown(
         f"""
-        <a href="{url_wa}" target="_blank">
+        <a href="{url_wa_texto}" target="_blank">
             <button style="
                 background-color: #25D366;
                 color: white;
                 border: none;
-                padding: 12px 24px;
-                font-size: 16px;
+                padding: 12px 20px;
+                font-size: 15px;
                 font-weight: bold;
                 border-radius: 8px;
                 cursor: pointer;
                 width: 100%;
+                margin-bottom: 12px;
             ">
-                📲 Enviar Cotización por WhatsApp
+                📲 Enviar Ficha de Texto por WhatsApp
             </button>
         </a>
         """,
         unsafe_allow_html=True
     )
 
-with col_der:
-    st.subheader("🖼️ Imagen del Catálogo")
-    clave = f"{marca_sel}_{modelo_sel}_{producto_sel}"
-    fotos = IMAGENES_CATALOGO.get(clave, [])
-
-    if fotos:
-        for i, url in enumerate(fotos):
-            st.image(url, caption=f"{marca_sel} {modelo_sel} - {producto_sel}", use_container_width=True)
-            st.download_button(
-                label=f"📥 Guardar Imagen {i+1} en Celular",
-                data=b"",
-                file_name=f"{clave}_{i+1}.jpg",
-                mime="image/jpeg",
-                key=f"dl_{i}"
-            )
-    else:
-        st.warning("💡 Foto no cargada localmente. Puedes adjuntar la imagen directamente desde tu Catálogo de WhatsApp Business.")
+    # Botón 2: Abrir Catálogo Nativo con Fotos
+    st.markdown(
+        f"""
+        <a href="{URL_CATALOGO_GENERAL}" target="_blank">
+            <button style="
+                background-color: #075E54;
+                color: white;
+                border: none;
+                padding: 12px 20px;
+                font-size: 15px;
+                font-weight: bold;
+                border-radius: 8px;
+                cursor: pointer;
+                width: 100%;
+            ">
+                🛍️ Abrir Catálogo de WhatsApp Business
+            </button>
+        </a>
+        """,
+        unsafe_allow_html=True
+    )amente desde tu Catálogo de WhatsApp Business.")
