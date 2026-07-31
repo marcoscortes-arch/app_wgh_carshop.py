@@ -277,31 +277,40 @@ def generar_banner_cuadrado(marca, modelo, producto, precio, anos, lista_rutas):
     lienzo = Image.new("RGB", (ANCHO, ALTO), color=(15, 15, 15))
     draw = ImageDraw.Draw(lienzo)
 
-    # Cabecera Elegante W.G.H
-    ALTO_CABECERA = 220
+    # Cabecera Elegante W.G.H (Ampliada un poco de alto para albergar fuentes grandes)
+    ALTO_CABECERA = 260
     draw.rectangle([(0, 0), (ANCHO, ALTO_CABECERA)], fill=(22, 22, 22))
     draw.rectangle([(0, ALTO_CABECERA - 6), (ANCHO, ALTO_CABECERA)], fill=(217, 4, 41))
 
+    # Fuentes mucho más grandes para garantizar legibilidad en móviles
     try:
-        font_titulo = ImageFont.truetype("arial.ttf", 44)
-        font_sub = ImageFont.truetype("arial.ttf", 32)
-        font_precio = ImageFont.truetype("arial.ttf", 48)
+        font_titulo = ImageFont.truetype("arial.ttf", 60)
+        font_sub = ImageFont.truetype("arial.ttf", 42)
+        font_repuesto = ImageFont.truetype("arial.ttf", 36)
+        font_precio_label = ImageFont.truetype("arial.ttf", 32)
+        font_precio = ImageFont.truetype("arial.ttf", 64)
     except IOError:
-        font_titulo = font_sub = font_precio = ImageFont.load_default()
+        font_titulo = font_sub = font_repuesto = font_precio_label = font_precio = ImageFont.load_default()
 
-    # Textos de la Marca y Repuesto
-    draw.text((40, 30), "W.G.H CAR SHOP", fill=(217, 4, 41), font=font_titulo)
-    draw.text((40, 85), f"{marca} {modelo}", fill=(255, 255, 255), font=font_sub)
-    draw.text((40, 130), f"REPUESTO: {producto.upper()} ({anos})", fill=(180, 180, 180), font=font_sub)
+    # Textos principales (Izquierda)
+    draw.text((40, 25), "W.G.H CAR SHOP", fill=(217, 4, 41), font=font_titulo)
+    draw.text((40, 95), f"{marca} {modelo}", fill=(255, 255, 255), font=font_sub)
+    draw.text((40, 160), f"REPUESTO: {producto.upper()} ({anos})", fill=(200, 200, 200), font=font_repuesto)
     
-    # Caja de Precio Estilizada Premium (Fondo Oscuro + Borde Rojo)
-    x_box_i, y_box_i = ANCHO - 370, 30
-    x_box_f, y_box_f = ANCHO - 40, 170
-    draw.rectangle([(x_box_i, y_box_i), (x_box_f, y_box_f)], fill=(10, 10, 10), outline=(217, 4, 41), width=3)
-    draw.text((x_box_i + 20, y_box_i + 15), "PRECIO OFERTA", fill=(200, 200, 200), font=font_sub)
-    draw.text((x_box_i + 20, y_box_i + 65), f"${precio:.2f} USD", fill=(255, 255, 255), font=font_precio)
+    # Caja de Precio Rediseñada (Derecha)
+    ANCHO_CAJA = 420
+    ALTO_CAJA = 180
+    x_box_i = ANCHO - ANCHO_CAJA - 40
+    y_box_i = 35
+    x_box_f = ANCHO - 40
+    y_box_f = y_box_i + ALTO_CAJA
 
-    # Distribución de Fotografías
+    # Dibujar caja de precio con borde grueso
+    draw.rectangle([(x_box_i, y_box_i), (x_box_f, y_box_f)], fill=(10, 10, 10), outline=(217, 4, 41), width=4)
+    draw.text((x_box_i + 30, y_box_i + 20), "PRECIO OFERTA", fill=(200, 200, 200), font=font_precio_label)
+    draw.text((x_box_i + 30, y_box_i + 75), f"${precio:.2f}", fill=(255, 255, 255), font=font_precio)
+
+    # Distribución de Fotografías (Ajustado al nuevo alto de cabecera)
     imgs_validas = [r for r in lista_rutas if os.path.exists(r)]
     num_imgs = len(imgs_validas)
 
@@ -340,10 +349,9 @@ def generar_banner_cuadrado(marca, modelo, producto, precio, anos, lista_rutas):
         lienzo.paste(img3, (20 + w_izq + 20, y_inicio + h_der + 20))
 
     buffer = io.BytesIO()
-    lienzo.save(buffer, format="JPEG", quality=90)
+    lienzo.save(buffer, format="JPEG", quality=95)
     buffer.seek(0)
     return buffer
-
 # ==========================================
 # 3. INTERFAZ INTERACTIVA STREAMLIT
 # ==========================================
