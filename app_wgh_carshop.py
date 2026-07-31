@@ -4,74 +4,318 @@ import os
 from PIL import Image, ImageDraw, ImageFont
 import io
 
-# 1. Base de datos de repuestos
+# ==========================================
+# 1. BASE DE DATOS EXTRAÍDA DEL PDF OFICIAL
+# ==========================================
 PRECIOS_CATALOGO = {
     "CHEVROLET": {
-        "D-MAX (2014-2018)": [
-            {
-                "producto": "Mascarilla D-Max", 
-                "anos": "2014-2018", 
-                "precio": 175.0, 
-                "obs": "Incluye Kit de Luces LED", 
-                "imagenes": [
-                    "fotos/chevrolet_dmax_Mascarilla20142018CLuces.jpeg",
-                    "fotos/chevrolet_dmax_Mascarilla20142018ExCLuces.jpeg",
-                    "fotos/chevrolet_dmax_Mascarilla20142018QuCLuces.jpeg"
-                ]
-            }
+        "D-MAX": [
+            {"producto": "Kit Cromado", "anos": "2003-2025", "precio": 125.0, "obs": "", "imagenes": []},
+            {"producto": "Apliques Negros de Faros y Guías", "anos": "2009-2013", "precio": 90.0, "obs": "", "imagenes": []},
+            {"producto": "Cubrelluvias", "anos": "2003-2025", "precio": 95.0, "obs": "", "imagenes": []},
+            {"producto": "Lamevidrios", "anos": "2014-2025", "precio": 85.0, "obs": "Diciembre", "imagenes": []},
+            {"producto": "Bandejas", "anos": "2014-2025", "precio": 55.0, "obs": "", "imagenes": []},
+            {"producto": "Cromado de Neblineros", "anos": "2014-2018", "precio": 55.0, "obs": "", "imagenes": []},
+            {"producto": "Cromado de Compuerta", "anos": "2003-2025", "precio": 75.0, "obs": "", "imagenes": []},
+            {"producto": "Cobertor Cromado Retrovisor con Luz", "anos": "2003-2025", "precio": 85.0, "obs": "", "imagenes": []},
+            {"producto": "Respiradero de Capot Cromado", "anos": "2014-2025", "precio": 60.0, "obs": "Diciembre", "imagenes": []},
+            {"producto": "Apliques Decorativos de Tablero", "anos": "2003-2007", "precio": 95.0, "obs": "", "imagenes": []},
+            {"producto": "Mascarillas sin Luz", "anos": "2009-2025", "precio": 135.0, "obs": "", "imagenes": []},
+            {"producto": "Mascarillas con Luz", "anos": "2019-2025", "precio": 165.0, "obs": "", "imagenes": []},
+            {"producto": "Mascarilla D-Max con LED", "anos": "2014-2018", "precio": 175.0, "obs": "Incluye Kit de Luces LED", "imagenes": [
+                "fotos/chevrolet_dmax_Mascarilla20142018CLuces.jpeg",
+                "fotos/chevrolet_dmax_Mascarilla20142018ExCLuces.jpeg",
+                "fotos/chevrolet_dmax_Mascarilla20142018QuCLuces.jpeg"
+            ]},
+            {"producto": "Estribos", "anos": "2014-2025", "precio": 175.0, "obs": "Diciembre", "imagenes": []},
+            {"producto": "Rudones", "anos": "2014-2025", "precio": 130.0, "obs": "", "imagenes": []}
+        ],
+        "AVEO (EMOTION / FAMILY / ACTIVO)": [
+            {"producto": "Kit Cromado", "anos": "Varios", "precio": 125.0, "obs": "", "imagenes": []},
+            {"producto": "Tapa de Combustible", "anos": "Varios", "precio": 25.0, "obs": "", "imagenes": []}
+        ],
+        "OPTRA": [
+            {"producto": "Kit Cromado más de 14 piezas con Luz", "anos": "2005-2007", "precio": 165.0, "obs": "", "imagenes": []}
+        ],
+        "SUZUKI SZ / VITARA SZ": [
+            {"producto": "Kit Cromado", "anos": "Varios", "precio": 125.0, "obs": "", "imagenes": []},
+            {"producto": "Bandejas", "anos": "Varios", "precio": 55.0, "obs": "", "imagenes": []},
+            {"producto": "Respiraderos de Capot", "anos": "Varios", "precio": 35.0, "obs": "", "imagenes": []},
+            {"producto": "Tapa Combustible", "anos": "Varios", "precio": 25.0, "obs": "", "imagenes": []},
+            {"producto": "Mascarilla Cromada", "anos": "Varios", "precio": 115.0, "obs": "", "imagenes": []}
+        ],
+        "SPARK / SPARK GT": [
+            {"producto": "Cubrelluvias Spark", "anos": "2008-2014", "precio": 95.0, "obs": "", "imagenes": []},
+            {"producto": "Kit Cromado Spark GT", "anos": "2008-2014", "precio": 125.0, "obs": "", "imagenes": []}
+        ],
+        "GRAND VITARA": [
+            {"producto": "Kit Cromado", "anos": "2008-2016", "precio": 125.0, "obs": "", "imagenes": []}
+        ],
+        "SAIL": [
+            {"producto": "Kit Cromado", "anos": "2008-2016", "precio": 125.0, "obs": "", "imagenes": []},
+            {"producto": "Cromado de Neblinero", "anos": "2008-2016", "precio": 55.0, "obs": "", "imagenes": []},
+            {"producto": "Cromado Tapa de Combustible", "anos": "2008-2016", "precio": 25.0, "obs": "", "imagenes": []},
+            {"producto": "Bisel de Baúl", "anos": "2017-2023", "precio": 55.0, "obs": "", "imagenes": []},
+            {"producto": "Kit Cromado Nuevo", "anos": "2017-2023", "precio": 125.0, "obs": "", "imagenes": []},
+            {"producto": "Contorno de Ventanas", "anos": "2017-2023", "precio": 110.0, "obs": "", "imagenes": []}
+        ],
+        "CAPTIVA": [
+            {"producto": "Kit Cromado", "anos": "2006-2010", "precio": 125.0, "obs": "", "imagenes": []}
+        ]
+    },
+    "TOYOTA": {
+        "HILUX": [
+            {"producto": "Kit Cromados", "anos": "2003-2025", "precio": 125.0, "obs": "", "imagenes": []},
+            {"producto": "Cromado Retrovisor con Luz", "anos": "2003-2015", "precio": 85.0, "obs": "", "imagenes": []},
+            {"producto": "Bandejas", "anos": "2003-2025", "precio": 55.0, "obs": "", "imagenes": []},
+            {"producto": "Tapa de Combustible", "anos": "2003-2025", "precio": 25.0, "obs": "", "imagenes": []},
+            {"producto": "Lamevidrios", "anos": "2003-2025", "precio": 75.0, "obs": "Diciembre", "imagenes": []},
+            {"producto": "Cobertor Cromado Neblineros", "anos": "2003-2015", "precio": 55.0, "obs": "", "imagenes": []},
+            {"producto": "Cobertor Cromado de Compuerta", "anos": "2012-2025", "precio": 55.0, "obs": "", "imagenes": []},
+            {"producto": "Luz de Compuerta", "anos": "2003-2011", "precio": 45.0, "obs": "", "imagenes": []},
+            {"producto": "Mascarillas con Luz", "anos": "2003-2025", "precio": 165.0, "obs": "", "imagenes": []},
+            {"producto": "Mascarillas sin Luz", "anos": "2003-2025", "precio": 125.0, "obs": "", "imagenes": []},
+            {"producto": "Tapa de Balde Corrediza", "anos": "2017-2025", "precio": 850.0, "obs": "", "imagenes": []},
+            {"producto": "Portavasos", "anos": "2003-2015", "precio": 110.0, "obs": "Diciembre", "imagenes": []},
+            {"producto": "Rudones", "anos": "2003-2025", "precio": 130.0, "obs": "", "imagenes": []},
+            {"producto": "Guías LED", "anos": "2017-2025", "precio": 240.0, "obs": "", "imagenes": []}
+        ],
+        "FORTUNER": [
+            {"producto": "Kit Cromados", "anos": "2008-2025", "precio": 125.0, "obs": "", "imagenes": []},
+            {"producto": "Bandejas", "anos": "2008-2025", "precio": 55.0, "obs": "", "imagenes": []},
+            {"producto": "Tapa de Combustible", "anos": "2008-2025", "precio": 25.0, "obs": "", "imagenes": []},
+            {"producto": "Bisel de Compuerta con Luz", "anos": "2012-2025", "precio": 145.0, "obs": "", "imagenes": []},
+            {"producto": "Letras de Capot Cromadas / Negras", "anos": "2008-2025", "precio": 45.0, "obs": "", "imagenes": []},
+            {"producto": "LED de Parachoques", "anos": "2017-2025", "precio": 85.0, "obs": "", "imagenes": []},
+            {"producto": "Rudones", "anos": "2016-2025", "precio": 130.0, "obs": "", "imagenes": []},
+            {"producto": "Apliques de Neblinero Grande / Pequeño", "anos": "2016-2025", "precio": 55.0, "obs": "", "imagenes": []},
+            {"producto": "Mascarillas sin Luz", "anos": "2008-2025", "precio": 125.0, "obs": "", "imagenes": []},
+            {"producto": "Mascarillas con Luz", "anos": "2008-2025", "precio": 165.0, "obs": "", "imagenes": []},
+            {"producto": "Contorno de Ventanas", "anos": "2016-2025", "precio": 135.0, "obs": "", "imagenes": []}
+        ],
+        "COROLLA": [
+            {"producto": "Kit Cromado +14 piezas con Luz", "anos": "2007-2010", "precio": 165.0, "obs": "", "imagenes": []}
+        ],
+        "RAV4": [
+            {"producto": "Kit Cromado +14 piezas", "anos": "2005-2012", "precio": 155.0, "obs": "", "imagenes": []}
+        ]
+    },
+    "KIA": {
+        "SPORTAGE ACTIVE": [
+            {"producto": "Kit Cromados", "anos": "Varios", "precio": 125.0, "obs": "", "imagenes": []},
+            {"producto": "Bandejas", "anos": "Varios", "precio": 55.0, "obs": "", "imagenes": []},
+            {"producto": "Tapa de Combustible", "anos": "Varios", "precio": 20.0, "obs": "", "imagenes": []},
+            {"producto": "Cobertores de Guardachoques", "anos": "Varios", "precio": 220.0, "obs": "", "imagenes": []},
+            {"producto": "Cobertor Cromado Neblineros", "anos": "Varios", "precio": 115.0, "obs": "", "imagenes": []},
+            {"producto": "Kit de Plumas", "anos": "Varios", "precio": 75.0, "obs": "", "imagenes": []},
+            {"producto": "Neblineros", "anos": "Varios", "precio": 155.0, "obs": "", "imagenes": []},
+            {"producto": "Bisel de Capot", "anos": "Varios", "precio": 55.0, "obs": "", "imagenes": []},
+            {"producto": "Parantes de Compuerta", "anos": "Varios", "precio": 55.0, "obs": "", "imagenes": []},
+            {"producto": "Estribos", "anos": "Varios", "precio": 165.0, "obs": "", "imagenes": []}
+        ],
+        "SPORTAGE R": [
+            {"producto": "Kit Cromados", "anos": "Varios", "precio": 125.0, "obs": "", "imagenes": []},
+            {"producto": "Bandejas", "anos": "Varios", "precio": 55.0, "obs": "", "imagenes": []},
+            {"producto": "Tapa de Combustible", "anos": "Varios", "precio": 20.0, "obs": "", "imagenes": []},
+            {"producto": "Cobertores de Guardachoques", "anos": "Varios", "precio": 220.0, "obs": "", "imagenes": []},
+            {"producto": "Contorno de Ventanas", "anos": "Varios", "precio": 110.0, "obs": "", "imagenes": []},
+            {"producto": "Cromado de Plumas", "anos": "Varios", "precio": 55.0, "obs": "", "imagenes": []},
+            {"producto": "Estribos", "anos": "Varios", "precio": 165.0, "obs": "", "imagenes": []},
+            {"producto": "Cubrelluvias", "anos": "Varios", "precio": 95.0, "obs": "", "imagenes": []}
+        ],
+        "CERATO FORTE": [
+            {"producto": "Kit Cromado", "anos": "2012-2016", "precio": 125.0, "obs": "", "imagenes": []},
+            {"producto": "Bandejas", "anos": "2012-2016", "precio": 55.0, "obs": "", "imagenes": []},
+            {"producto": "Tapa de Combustible", "anos": "2012-2016", "precio": 25.0, "obs": "", "imagenes": []}
+        ],
+        "RIO EXCITE": [
+            {"producto": "Kit Cromado", "anos": "2007-2014", "precio": 125.0, "obs": "", "imagenes": []}
+        ],
+        "SORENTO": [
+            {"producto": "Kit Cromado", "anos": "2009-2014", "precio": 125.0, "obs": "", "imagenes": []}
+        ]
+    },
+    "HYUNDAI": {
+        "TUCSON CLASICO": [
+            {"producto": "Kit Cromados", "anos": "Varios", "precio": 125.0, "obs": "", "imagenes": []},
+            {"producto": "Bandejas", "anos": "Varios", "precio": 55.0, "obs": "", "imagenes": []},
+            {"producto": "Cobertor Retrovisor con Guía", "anos": "Varios", "precio": 85.0, "obs": "", "imagenes": []},
+            {"producto": "Mascarilla Cromada", "anos": "Varios", "precio": 110.0, "obs": "", "imagenes": []},
+            {"producto": "Tapa de Combustible", "anos": "Varios", "precio": 25.0, "obs": "", "imagenes": []},
+            {"producto": "Cobertores de Guardachoques", "anos": "Varios", "precio": 220.0, "obs": "", "imagenes": []},
+            {"producto": "Kit de Plumas y Rejilla", "anos": "Varios", "precio": 115.0, "obs": "", "imagenes": []},
+            {"producto": "Estribos", "anos": "Varios", "precio": 165.0, "obs": "", "imagenes": []}
+        ],
+        "TUCSON ix35": [
+            {"producto": "Kit Cromados", "anos": "Varios", "precio": 125.0, "obs": "", "imagenes": []},
+            {"producto": "Cubrelluvias", "anos": "Varios", "precio": 95.0, "obs": "", "imagenes": []},
+            {"producto": "Bandejas", "anos": "Varios", "precio": 55.0, "obs": "", "imagenes": []},
+            {"producto": "Tapa de Combustible", "anos": "Varios", "precio": 25.0, "obs": "", "imagenes": []},
+            {"producto": "Cobertores de Guardachoques", "anos": "Varios", "precio": 220.0, "obs": "", "imagenes": []},
+            {"producto": "Estribos", "anos": "Varios", "precio": 175.0, "obs": "", "imagenes": []},
+            {"producto": "Mascarillas", "anos": "Varios", "precio": 155.0, "obs": "", "imagenes": []},
+            {"producto": "Contorno de Ventanas", "anos": "Varios", "precio": 110.0, "obs": "", "imagenes": []}
+        ],
+        "ACCENT": [
+            {"producto": "Kit Cromado", "anos": "2007-2023", "precio": 125.0, "obs": "", "imagenes": []},
+            {"producto": "Tapa de Combustible", "anos": "2007-2023", "precio": 25.0, "obs": "", "imagenes": []},
+            {"producto": "Bandejas", "anos": "2012-2023", "precio": 55.0, "obs": "", "imagenes": []},
+            {"producto": "Contorno de Ventanas", "anos": "2012-2023", "precio": 110.0, "obs": "", "imagenes": []},
+            {"producto": "Bisel de Baúl", "anos": "2012-2023", "precio": 55.0, "obs": "", "imagenes": []}
+        ],
+        "CRETA": [
+            {"producto": "Kit Cromado +14 piezas", "anos": "2014-2018", "precio": 155.0, "obs": "", "imagenes": []}
+        ],
+        "TUCSON TL": [
+            {"producto": "Kit Cromado +14 piezas", "anos": "hasta 2023", "precio": 155.0, "obs": "", "imagenes": []},
+            {"producto": "Mascarilla Cromada", "anos": "2023", "precio": 155.0, "obs": "", "imagenes": []}
+        ],
+        "FURGONETA H1": [
+            {"producto": "Cromado de Faros y Guías", "anos": "2005-2011", "precio": 90.0, "obs": "", "imagenes": []},
+            {"producto": "Cobertor Cromado con Luz Retrovisores", "anos": "2005-2011", "precio": 85.0, "obs": "", "imagenes": []},
+            {"producto": "Kit Cromado", "anos": "2011-2018", "precio": 155.0, "obs": "", "imagenes": []}
+        ],
+        "SANTA FE": [
+            {"producto": "Kit Cromado", "anos": "2006-2018", "precio": 125.0, "obs": "", "imagenes": []},
+            {"producto": "Estribos", "anos": "2007-2012", "precio": 165.0, "obs": "", "imagenes": []},
+            {"producto": "Cobertores de Guardachoque", "anos": "2007-2012", "precio": 220.0, "obs": "", "imagenes": []}
+        ]
+    },
+    "NISSAN": {
+        "TIIDA HATCHBACK": [
+            {"producto": "Kit Cromado +14 piezas con Luz", "anos": "2014", "precio": 165.0, "obs": "", "imagenes": []}
+        ],
+        "QASHQAI": [
+            {"producto": "Kit Cromado +14 piezas", "anos": "2006-2010", "precio": 155.0, "obs": "", "imagenes": []}
+        ],
+        "FRONTIER": [
+            {"producto": "Kit Cromado sin Retrovisores", "anos": "2016-2021", "precio": 125.0, "obs": "", "imagenes": []}
+        ]
+    },
+    "MITSUBISHI": {
+        "L200": [
+            {"producto": "Kit Cromado 19 Piezas", "anos": "2006-2014", "precio": 250.0, "obs": "", "imagenes": []},
+            {"producto": "Kit Cromado", "anos": "2015-2018", "precio": 125.0, "obs": "", "imagenes": []},
+            {"producto": "Bandejas", "anos": "2015-2018", "precio": 55.0, "obs": "", "imagenes": []},
+            {"producto": "Cromado de Neblineros", "anos": "2015-2018", "precio": 55.0, "obs": "", "imagenes": []},
+            {"producto": "Tapa de Combustible", "anos": "2015-2018", "precio": 25.0, "obs": "", "imagenes": []},
+            {"producto": "Tapa de Balde", "anos": "2016-2024", "precio": 550.0, "obs": "", "imagenes": []},
+            {"producto": "Cromado Manija de Compuerta", "anos": "2015-2018", "precio": 55.0, "obs": "", "imagenes": []},
+            {"producto": "Rudones", "anos": "2016-2023", "precio": 130.0, "obs": "", "imagenes": []}
+        ]
+    },
+    "MAZDA": {
+        "BT-50": [
+            {"producto": "Kit Cromado", "anos": "2008-2023", "precio": 125.0, "obs": "", "imagenes": []},
+            {"producto": "Bandejas", "anos": "2008-2023", "precio": 55.0, "obs": "", "imagenes": []},
+            {"producto": "Tapa de Combustible", "anos": "2008-2015", "precio": 25.0, "obs": "", "imagenes": []},
+            {"producto": "Cromado Manija de Compuerta", "anos": "2008-2015", "precio": 55.0, "obs": "", "imagenes": []},
+            {"producto": "Cromado de Neblineros", "anos": "2016-2023", "precio": 55.0, "obs": "", "imagenes": []},
+            {"producto": "Respiraderos Cromados", "anos": "2016-2023", "precio": 35.0, "obs": "", "imagenes": []},
+            {"producto": "Mascarilla", "anos": "2016-2023", "precio": 165.0, "obs": "", "imagenes": []},
+            {"producto": "Rudones", "anos": "2016-2023", "precio": 130.0, "obs": "", "imagenes": []}
+        ]
+    },
+    "FORD": {
+        "RANGER": [
+            {"producto": "Kit Cromado", "anos": "2012-2025", "precio": 125.0, "obs": "", "imagenes": []},
+            {"producto": "Bandejas", "anos": "2012-2025", "precio": 55.0, "obs": "", "imagenes": []},
+            {"producto": "Tapa de Combustible", "anos": "2012-2025", "precio": 25.0, "obs": "", "imagenes": []},
+            {"producto": "Tapa de Balde Estilo Americano", "anos": "2012-2025", "precio": 650.0, "obs": "", "imagenes": []},
+            {"producto": "Rudones", "anos": "2012-2026", "precio": 130.0, "obs": "", "imagenes": []},
+            {"producto": "Tapa de Balde Corrediza", "anos": "2012-2025", "precio": 850.0, "obs": "", "imagenes": []},
+            {"producto": "Faros LED", "anos": "2017-2025", "precio": 750.0, "obs": "", "imagenes": []},
+            {"producto": "Guías LED", "anos": "2017-2025", "precio": 240.0, "obs": "", "imagenes": []},
+            {"producto": "Bodykit Raptor Cárter Metálico", "anos": "2017-2025", "precio": 850.0, "obs": "", "imagenes": []},
+            {"producto": "Bodykit Raptor Guardachoque Metálico", "anos": "2017-2025", "precio": 1250.0, "obs": "", "imagenes": []},
+            {"producto": "Bodykit Raptor con LED", "anos": "2017-2025", "precio": 750.0, "obs": "", "imagenes": []},
+            {"producto": "Bodykit T9", "anos": "2026", "precio": 1250.0, "obs": "", "imagenes": []},
+            {"producto": "Mascarilla Raptor sin Luz", "anos": "2012-2015", "precio": 145.0, "obs": "", "imagenes": []},
+            {"producto": "Mascarilla Raptor con Luz", "anos": "2012-2015", "precio": 260.0, "obs": "", "imagenes": []},
+            {"producto": "Mascarilla Raptor Gasolina / Diesel", "anos": "2017-2025", "precio": 220.0, "obs": "", "imagenes": []},
+            {"producto": "Mascarilla Raptor T9", "anos": "2025", "precio": 220.0, "obs": "", "imagenes": []},
+            {"producto": "Estribos Raptor", "anos": "2017-2026", "precio": 340.0, "obs": "", "imagenes": []}
+        ],
+        "F-150": [
+            {"producto": "Cobertores Cromados de Guías / Retrovisores", "anos": "2009-2021", "precio": 115.0, "obs": "", "imagenes": []},
+            {"producto": "Cubrelluvias Cromadas", "anos": "2009-2021", "precio": 180.0, "obs": "", "imagenes": []},
+            {"producto": "Cubrelluvias Color Negro", "anos": "2009-2014", "precio": 160.0, "obs": "", "imagenes": []},
+            {"producto": "Aplique Cromado de Compuerta", "anos": "2009-2014", "precio": 350.0, "obs": "", "imagenes": []},
+            {"producto": "Cromado de Manijas", "anos": "2009-2021", "precio": 85.0, "obs": "", "imagenes": []},
+            {"producto": "Bandejas Cromadas", "anos": "2009-2021", "precio": 75.0, "obs": "", "imagenes": []},
+            {"producto": "Mascarillas (1978-2017)", "anos": "1978-2017", "precio": 220.0, "obs": "", "imagenes": []},
+            {"producto": "Mascarillas (2018-2024)", "anos": "2018-2024", "precio": 320.0, "obs": "", "imagenes": []},
+            {"producto": "Guardachoque", "anos": "2009-2021", "precio": 650.0, "obs": "", "imagenes": []},
+            {"producto": "Faldones / Fenders Raptor", "anos": "2009-2021", "precio": 295.0, "obs": "", "imagenes": []},
+            {"producto": "Faldones / Fenders de Pernos", "anos": "2009-2021", "precio": 265.0, "obs": "", "imagenes": []},
+            {"producto": "Aplique Negro de Compuerta", "anos": "2015-2025", "precio": 195.0, "obs": "", "imagenes": []},
+            {"producto": "Parachoque Negro / Cromado", "anos": "2009-2021", "precio": 350.0, "obs": "", "imagenes": []},
+            {"producto": "Tapa de Balde Estilo Americano", "anos": "2009-2025", "precio": 650.0, "obs": "", "imagenes": []},
+            {"producto": "Tapa de Balde Corrediza", "anos": "2009-2025", "precio": 850.0, "obs": "", "imagenes": []},
+            {"producto": "Faros LED", "anos": "2009-2015", "precio": 650.0, "obs": "", "imagenes": []},
+            {"producto": "Guías LED", "anos": "2009-2014", "precio": 390.0, "obs": "", "imagenes": []}
+        ],
+        "EXPLORER": [
+            {"producto": "Kit Cromado (2007-2011)", "anos": "2007-2011", "precio": 125.0, "obs": "", "imagenes": []},
+            {"producto": "Kit Cromado (2012-2015)", "anos": "2012-2015", "precio": 195.0, "obs": "", "imagenes": []},
+            {"producto": "Tapa de Combustible Cromada", "anos": "2012-2015", "precio": 25.0, "obs": "", "imagenes": []},
+            {"producto": "Mascarilla Raptor", "anos": "1995-2017", "precio": 220.0, "obs": "", "imagenes": []},
+            {"producto": "Letras de Capot", "anos": "1995-2026", "precio": 40.0, "obs": "", "imagenes": []}
+        ],
+        "EXPLORER SPORT TRAC": [
+            {"producto": "Kit Cromado", "anos": "2007-2011", "precio": 125.0, "obs": "", "imagenes": []},
+            {"producto": "Mascarilla Raptor", "anos": "2007-2011", "precio": 220.0, "obs": "", "imagenes": []}
         ]
     }
 }
 
+# ==========================================
+# 2. GENERADOR DE AFICHE NÍTIDO (1080x1080)
+# ==========================================
 def generar_banner_cuadrado(marca, modelo, producto, precio, anos, lista_rutas):
-    """
-    Genera una sola imagen cuadrada estilo afiche publicitario (1080x1080 px)
-    con tipografía grande y distribución nítida.
-    """
     ANCHO, ALTO = 1080, 1080
     lienzo = Image.new("RGB", (ANCHO, ALTO), color=(15, 15, 15))
     draw = ImageDraw.Draw(lienzo)
 
-    # 1. Franja Superior (Cabecera Publicitaria)
-    ALTO_CABECERA = 240
-    draw.rectangle([(0, 0), (ANCHO, ALTO_CABECERA)], fill=(20, 20, 20))
-    draw.rectangle([(0, ALTO_CABECERA - 8), (ANCHO, ALTO_CABECERA)], fill=(217, 4, 41)) # Línea roja de marca
+    # Cabecera Elegante W.G.H
+    ALTO_CABECERA = 220
+    draw.rectangle([(0, 0), (ANCHO, ALTO_CABECERA)], fill=(22, 22, 22))
+    draw.rectangle([(0, ALTO_CABECERA - 6), (ANCHO, ALTO_CABECERA)], fill=(217, 4, 41))
 
-    # Cargar tipografía por defecto o personalizada
     try:
-        font_titulo = ImageFont.truetype("arial.ttf", 46)
-        font_sub = ImageFont.truetype("arial.ttf", 36)
-        font_precio = ImageFont.truetype("arial.ttf", 52)
+        font_titulo = ImageFont.truetype("arial.ttf", 44)
+        font_sub = ImageFont.truetype("arial.ttf", 32)
+        font_precio = ImageFont.truetype("arial.ttf", 48)
     except IOError:
         font_titulo = font_sub = font_precio = ImageFont.load_default()
 
-    # Textos de la Oferta
-    draw.text((40, 25), "W.G.H CAR SHOP", fill=(217, 4, 41), font=font_titulo)
-    draw.text((40, 85), f"{marca} {modelo} ({anos})", fill=(255, 255, 255), font=font_sub)
-    draw.text((40, 135), f"REPUESTO: {producto.upper()}", fill=(200, 200, 200), font=font_sub)
+    # Textos de la Marca y Repuesto
+    draw.text((40, 30), "W.G.H CAR SHOP", fill=(217, 4, 41), font=font_titulo)
+    draw.text((40, 85), f"{marca} {modelo}", fill=(255, 255, 255), font=font_sub)
+    draw.text((40, 130), f"REPUESTO: {producto.upper()} ({anos})", fill=(180, 180, 180), font=font_sub)
     
-    # Caja destacada para el Precio
-    draw.rectangle([(ANCHO - 380, 30), (ANCHO - 40, 180)], fill=(37, 211, 102))
-    draw.text((ANCHO - 360, 50), "OFERTA", fill=(0, 0, 0), font=font_sub)
-    draw.text((ANCHO - 360, 100), f"${precio:.2f}", fill=(0, 0, 0), font=font_precio)
+    # Caja de Precio Estilizada Premium (Fondo Oscuro + Borde Rojo)
+    x_box_i, y_box_i = ANCHO - 370, 30
+    x_box_f, y_box_f = ANCHO - 40, 170
+    draw.rectangle([(x_box_i, y_box_i), (x_box_f, y_box_f)], fill=(10, 10, 10), outline=(217, 4, 41), width=3)
+    draw.text((x_box_i + 20, y_box_i + 15), "PRECIO OFERTA", fill=(200, 200, 200), font=font_sub)
+    draw.text((x_box_i + 20, y_box_i + 65), f"${precio:.2f} USD", fill=(255, 255, 255), font=font_precio)
 
-    # 2. Organización Mosaico de Fotografías (Grid)
+    # Distribución de Fotografías
     imgs_validas = [r for r in lista_rutas if os.path.exists(r)]
     num_imgs = len(imgs_validas)
 
-    y_inicio = ALTO_CABECERA + 15
+    y_inicio = ALTO_CABECERA + 20
     alto_disponible = ALTO - y_inicio - 20
     ancho_disponible = ANCHO - 40
 
     if num_imgs == 1:
-        # 1 foto centrada grande
         img = Image.open(imgs_validas[0]).convert("RGB")
         img.thumbnail((ancho_disponible, alto_disponible))
         x = (ANCHO - img.width) // 2
         lienzo.paste(img, (x, y_inicio))
 
     elif num_imgs == 2:
-        # 2 fotos lado a lado
         w_box = (ancho_disponible // 2) - 10
         for i, ruta in enumerate(imgs_validas[:2]):
             img = Image.open(ruta).convert("RGB")
@@ -80,34 +324,31 @@ def generar_banner_cuadrado(marca, modelo, producto, precio, anos, lista_rutas):
             lienzo.paste(img, (x, y_inicio))
 
     elif num_imgs >= 3:
-        # 3 fotos: 1 principal grande a la izquierda, 2 secundarias a la derecha
         w_izq = (ancho_disponible // 2) - 10
         h_der = (alto_disponible // 2) - 10
 
-        # Foto 1 (Izquierda)
         img1 = Image.open(imgs_validas[0]).convert("RGB")
         img1.thumbnail((w_izq, alto_disponible))
         lienzo.paste(img1, (20, y_inicio))
 
-        # Foto 2 (Derecha Arriba)
         img2 = Image.open(imgs_validas[1]).convert("RGB")
         img2.thumbnail((w_izq, h_der))
         lienzo.paste(img2, (20 + w_izq + 20, y_inicio))
 
-        # Foto 3 (Derecha Abajo)
         img3 = Image.open(imgs_validas[2]).convert("RGB")
         img3.thumbnail((w_izq, h_der))
         lienzo.paste(img3, (20 + w_izq + 20, y_inicio + h_der + 20))
 
-    # Guardar en memoria RAM optimizado
     buffer = io.BytesIO()
-    lienzo.save(buffer, format="JPEG", quality=88)
+    lienzo.save(buffer, format="JPEG", quality=90)
     buffer.seek(0)
     return buffer
 
-# --- INTERFAZ STREAMLIT ---
-st.set_page_config(page_title="Cotizador W.G.H CarShop", layout="wide")
-st.title("📦 Cotizador y Creador de Ofertas")
+# ==========================================
+# 3. INTERFAZ INTERACTIVA STREAMLIT
+# ==========================================
+st.set_page_config(page_title="Ofertas - W.G.H CarShop", layout="wide")
+st.title("📦 Cotizador y Ofertas W.G.H CarShop")
 
 col1, col2, col3 = st.columns(3)
 with col1:
@@ -130,6 +371,8 @@ with col_izq:
     st.subheader(f"🏷️ Ficha: {marca_sel} {modelo_sel}")
     st.write(f"**Repuesto:** {info['producto']}")
     st.write(f"**Años compatibles:** {info['anos']}")
+    if info['obs']:
+        st.info(f"💡 **Nota:** {info['obs']}")
     
     precio_final = st.number_input(
         "💵 Precio Final ($ USD):", 
@@ -138,7 +381,7 @@ with col_izq:
         step=5.0
     )
 
-    st.markdown("### 🖼️ Galería Individual")
+    st.markdown("### 🖼️ Galería de Fotos")
     lista_imagenes = info.get("imagenes", [])
     if lista_imagenes:
         tabs = st.tabs([f"Foto {i+1}" for i in range(len(lista_imagenes))])
@@ -147,19 +390,18 @@ with col_izq:
                 ruta_img = lista_imagenes[idx]
                 if os.path.exists(ruta_img):
                     st.image(ruta_img, use_column_width=True)
+    else:
+        st.caption("*(Puedes agregar fotos locales en el repositorio para este repuesto)*")
 
 with col_der:
-    st.subheader("🖼️ Afiche de Oferta Consolidado (1080x1080)")
+    st.subheader("🖼️ Afiche Publicitario Generado (1080x1080)")
     
-    # Generar el banner cuadrado
     buffer_banner = generar_banner_cuadrado(
         marca_sel, modelo_sel, info['producto'], precio_final, info['anos'], lista_imagenes
     )
 
-    # Previsualización
-    st.image(buffer_banner, caption="Vista previa del banner publicitario para WhatsApp", use_column_width=True)
+    st.image(buffer_banner, caption="Vista previa de afiche para WhatsApp", use_column_width=True)
 
-    # Botón de Descarga
     st.download_button(
         label="📥 Descargar Afiche de Oferta (JPEG)",
         data=buffer_banner,
@@ -189,7 +431,7 @@ with col_der:
                 cursor: pointer;
                 width: 100%;
             ">
-                📲 Abrir WhatsApp y Adjuntar Afiche
+                📲 Abrir WhatsApp y Enviar Texto
             </button>
         </a>
         """,
